@@ -4,6 +4,6 @@ const { userControllers } = require("../controllers");
 const { authToken } = require("../helper/authToken");
 
 routers.post("/login", userControllers.loginUser);
-routers.patch("/keep-login", authToken, userControllers.keepLogin);
+routers.post("/keep-login", authToken, userControllers.keepLogin);
 
 module.exports = routers;
