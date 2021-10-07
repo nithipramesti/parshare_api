@@ -7,6 +7,10 @@ const db = mysql.createPool({
   database: "db_parshare",
   port: 3306,
   multipleStatements: true,
+  connectionLimit: 1000,
+  connectTimeout: 60 * 60 * 1000,
+  acquireTimeout: 60 * 60 * 1000,
+  timeout: 60 * 60 * 1000,
 });
 
 db.getConnection((err) => {

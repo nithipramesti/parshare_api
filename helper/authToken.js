@@ -1,19 +1,18 @@
 const jwt = require('jsonwebtoken')
-
+const dotenv = require("dotenv")
+dotenv.config()
 
 module.exports = {
-    auth:(req,res,next) => {
-        token = req.headers.authorization.split(' ')[1]
-        jwt.verify(token, process.env.SECRET_KEY, (err, decode) => {
-            if(err) {
-                return res.status(401).send({
-                    message : "authorization failed",
-                    error : err
-                })
-            }
-            req.user = decode
-
-            next()
+  auth: (req, res, next) => {
+    jwt.verify(req.token, process.env.TOKEN_KEY, (err, decoded) => {
+      if(err){
+        return res.status(401).send({
+          success: false,
+          data: "User not auth!"
         })
-    }
+      }
+      req.user = decoded
+      next();
+    })
+  }
 }
