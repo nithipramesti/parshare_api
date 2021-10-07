@@ -60,7 +60,7 @@ module.exports = {
       } else {
         res.status(200).send({
           errMessage:
-            "Email and password do not match, or you do not have an account yet",
+            "Email and password do not match, or you don't have an account yet",
         });
       }
     });
