@@ -44,10 +44,17 @@ module.exports = {
                             console.log(`token : ${token}`)
 
                             let mail = {
-                                from : "admin <mohammad.mauliadi@gmail.com>",
+                                from : "admin <parshare.company@gmail.com>",
                                 to : `${email}`,
                                 subject : "Account Verification",
-                                html : `<a href = "http://localhost:3000/authentication/${token}">Click here</a>`
+                                html : `Hi ${username},
+                                <br>
+                                Please click the link below to complete your verification process
+                                <br>
+                                <a href = "http://localhost:3000/authentication/${token}">Click here</a>
+                                <br>
+                                Thank you
+                                `
                             }
         
                             transporter.sendMail(mail, (errMail, resMail) => {
@@ -109,5 +116,5 @@ module.exports = {
                 })
             })
         })
-    },
+    }
 }
