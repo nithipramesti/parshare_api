@@ -13,10 +13,20 @@ app.use(bearerToken());
 
 app.use(express.static("public"));
 
+app.get("/", (req, res) => {
+  res.status(200).send("<h4>Welcome to your-api</h4>");
+});
+
 const {
+  userRouters,
+  parcelRouters,
   productRouters,
+  transactionRouters,
 } = require("./routers");
 
+app.use("/users", userRouters);
+app.use("/parcels", parcelRouters);
 app.use("/products", productRouters);
+app.use("/transactions", transactionRouters);
 
 app.listen(PORT, () => console.log("Api Running :", PORT));
