@@ -19,6 +19,7 @@ app.get("/", (req, res) => {
 
 const {
   userRouters,
+  changePasswordRouters,
   parcelRouters,
   productRouters,
   transactionRouters,
@@ -26,6 +27,7 @@ const {
 } = require("./routers");
 
 app.use("/users", userRouters);
+app.use("/change-password", changePasswordRouters);
 app.use("/parcels", parcelRouters);
 app.use("/products", productRouters);
 app.use("/transactions", transactionRouters);
