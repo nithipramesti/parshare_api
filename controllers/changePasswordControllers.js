@@ -128,10 +128,6 @@ module.exports = {
   },
 
   resetPassword: (req, res) => {
-    console.log(
-      `Will change password of ${req.body.userData.username} to '${req.body.newPassword}'`
-    );
-
     //Hashing password
     req.body.newPassword = Crypto.createHmac(
       "sha1",
@@ -145,7 +141,7 @@ module.exports = {
       req.body.newPassword
     )} where email=${db.escape(req.body.userData.email)};`;
 
-    db.query(updateQuery, (err, results) => {
+    db.query(updateQuery, (err, results0) => {
       if (err) res.status(500).send({ errMessage: "Update user data failed" });
 
       //GET UPDATED USER DATA
@@ -200,6 +196,115 @@ module.exports = {
           });
         }
       });
+    });
+  },
+
+  changePassword: (req, res) => {
+    //Hashing old password
+    const oldPassword = Crypto.createHmac("sha1", `${process.env.SHARED_KEY}`)
+      .update(req.body.oldPassword)
+      .digest("hex");
+
+    //Get user data:
+
+    let selectQuery = `Select * from users where email=${db.escape(
+      req.body.userData.email
+    )};`;
+
+    db.query(selectQuery, (err, results1) => {
+      console.log("result1");
+      if (err)
+        res
+          .status(500)
+          .send({ errMessage: "Server error, please try again later" });
+
+      if (results1[0]) {
+        if (results1[0].password === oldPassword) {
+          //Hashing old password
+          const newPassword = Crypto.createHmac(
+            "sha1",
+            `${process.env.SHARED_KEY}`
+          )
+            .update(req.body.newPassword)
+            .digest("hex");
+
+          //Edit user password:
+          let updatePasswordQuery = `Update users set password = ${db.escape(
+            newPassword
+          )} where email=${db.escape(req.body.userData.email)};`;
+
+          db.query(updatePasswordQuery, (err, results2) => {
+            console.log("result2");
+            if (err) {
+              res
+                .status(500)
+                .send({ errMessage: "Server error, please try again later" });
+            }
+
+            console.log("Update password success, will get updated user data");
+
+            let getNewDataQuery = `Select * from users where email=${db.escape(
+              req.body.userData.email
+            )};`;
+
+            db.query(getNewDataQuery, (err, results3) => {
+              console.log("result3");
+              if (err) {
+                res
+                  .status(500)
+                  .send({ errMessage: "Server error, please try again later" });
+              }
+
+              if (results3[0]) {
+                console.log("result3 success");
+                //Destructuring results
+                let {
+                  id_user,
+                  username,
+                  email,
+                  password,
+                  role,
+                  verified,
+                  gender,
+                  fullname,
+                  address,
+                  birthdate,
+                  pitcure_link,
+                } = results3[0];
+
+                //create TOKEN -- will save on local storage via FE
+                let token = createToken({
+                  id_user,
+                  username,
+                  email,
+                  password,
+                  role,
+                  verified,
+                  gender,
+                  fullname,
+                  address,
+                  birthdate,
+                  pitcure_link,
+                });
+
+                console.log("Get updated data success, username: ", username);
+
+                res.status(200).send({
+                  dataLogin: results3[0],
+                  token,
+                  message: "Change password success",
+                });
+              }
+            });
+          });
+        } else {
+          console.log("Old password do not match");
+
+          res.status(200).send({
+            errMessage: "The old password you have entered is incorrect",
+          });
+        }
+      }
     });
   },
 };
