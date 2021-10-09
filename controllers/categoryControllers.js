@@ -36,8 +36,8 @@ module.exports = {
     }
   },
   getCategory : (req,res) => {
-    if(req.user.id){
-      let getQuery = `select * from categories where id_category = ${db.escape(req.query.id)}`
+    if(req.query.id){
+      let getQuery = `SELECT categories.id_category, categories.category, count(*) as total FROM categories INNER JOIN products ON categories.id_category = products.id_category WHERE categories.id_category = ${db.escape(req.query.id)}`
       db.query(getQuery, (err, result) => {
         if(err){
           return res.status(500).send({
@@ -54,7 +54,7 @@ module.exports = {
     }else{
       res.status(500).send({
         success: false,
-        data: "Category id required!"
+        data: "Missing query!"
       })
     }
   },
@@ -129,7 +129,7 @@ module.exports = {
   deleteCategory: (req, res) => {
     if(req.user.role === "admin"){
       let { id } = req.query;
-      let deleteQuery = `update categories set active = 'false' where id_categories = ${db.escape(parseInt(id))}`
+      let deleteQuery = `update categories set active = 'false' where id_category = ${db.escape(parseInt(id))}`
       db.query(deleteQuery, (err, result) => {
         if(err){
           return res.status(500).send({
