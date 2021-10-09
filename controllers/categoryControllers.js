@@ -36,8 +36,8 @@ module.exports = {
     }
   },
   getCategory : (req,res) => {
-    if(req.user.id){
-      let getQuery = `select * from categories where id_category = ${db.escape(req.query.id)}`
+    if(req.query.id){
+      let getQuery = `SELECT categories.id_category, categories.category, count(*) as total FROM categories INNER JOIN products ON categories.id_category = products.id_category WHERE categories.id_category = ${db.escape(req.query.id)}`
       db.query(getQuery, (err, result) => {
         if(err){
           return res.status(500).send({
