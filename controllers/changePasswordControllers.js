@@ -29,7 +29,7 @@ module.exports = {
           fullname,
           address,
           birthdate,
-          pitcure_link,
+          picture_link,
         } = results[0];
 
         //create token
@@ -44,7 +44,7 @@ module.exports = {
           fullname,
           address,
           birthdate,
-          pitcure_link,
+          picture_link,
         });
 
         if (verified != "true") {
@@ -165,7 +165,7 @@ module.exports = {
             fullname,
             address,
             birthdate,
-            pitcure_link,
+            picture_link,
           } = results[0];
 
           //create TOKEN -- will save on local storage via FE
@@ -180,7 +180,7 @@ module.exports = {
             fullname,
             address,
             birthdate,
-            pitcure_link,
+            picture_link,
           });
 
           console.log("Change password success, username: ", username);
@@ -269,7 +269,7 @@ module.exports = {
                   fullname,
                   address,
                   birthdate,
-                  pitcure_link,
+                  picture_link,
                 } = results3[0];
 
                 //create TOKEN -- will save on local storage via FE
@@ -284,7 +284,7 @@ module.exports = {
                   fullname,
                   address,
                   birthdate,
-                  pitcure_link,
+                  picture_link,
                 });
 
                 console.log("Get updated data success, username: ", username);
