@@ -1,7 +1,7 @@
 const { db } = require("../database");
 const { createToken } = require("../helper/createToken");
-const Crypto = require('crypto');
-const transporter = require('../helper/nodemailer')
+const Crypto = require("crypto");
+const transporter = require("../helper/nodemailer");
 
 module.exports = {
   registerUser: (req, res) => {
@@ -13,35 +13,63 @@ module.exports = {
         return res.status(500).send({
           message: "Internal Server Error",
           error: checkErr,
-        })
+        });
       }
 
       if (checkResult[0]) {
         res.status(200).send({
           message: "User Already Registered",
-          success: false
-        })
+          success: false,
+        });
       } else {
-        let insertQueryUser = `insert into users values (null,${db.escape(username)},${db.escape(email)},${db.escape(password)},'user','false',null,null,null,null,null)`
+        let insertQueryUser = `insert into users values (null,${db.escape(
+          username
+        )},${db.escape(email)},${db.escape(
+          password
+        )},'user','false',null,null,null,null,null)`;
         db.query(insertQueryUser, (err, result) => {
           if (err) {
             return res.status(500).send({
               message: "Internal Server Error",
               error: err,
-            })
+            });
           }
           if (result.insertId) {
             let selectQuery = `select * from users where id_user = ${db.escape(result.insertId)}`
             db.query(selectQuery, (errRes, resultRes) => {
               if (errRes) {
-                res.status(500).send("internal server error")
+                res.status(500).send("internal server error");
               }
 
-              let { id_user, username, email, password, role, verified, gender, fullname, address, birthdate, picture_link } = resultRes[0]
+              let {
+                id_user,
+                username,
+                email,
+                password,
+                role,
+                verified,
+                gender,
+                fullname,
+                address,
+                birthdate,
+                picture_link,
+              } = resultRes[0];
 
-              let token = createToken({ id_user, username, email, password, role, verified, gender, fullname, address, birthdate, picture_link })
+              let token = createToken({
+                id_user,
+                username,
+                email,
+                password,
+                role,
+                verified,
+                gender,
+                fullname,
+                address,
+                birthdate,
+                picture_link,
+              });
 
-              console.log(`token : ${token}`)
+              console.log(`token : ${token}`);
 
               let mail = {
                 from: "admin <parshare.company@gmail.com>",
@@ -54,16 +82,16 @@ module.exports = {
                             <a href = "http://localhost:3000/authentication/${token}">Click here</a>
                             <br>
                             Thank you
-                            `
-              }
+                            `,
+              };
 
               transporter.sendMail(mail, (errMail, resMail) => {
                 if (errMail) {
-                  console.log(errMail)
+                  console.log(errMail);
                   res.status(200).send({
                     message: "Registration Failed",
-                    success: false
-                  })
+                    success: false,
+                  });
                 }
                 res.status(200).send({
                   message: `Hi ${username}, please check your email to complete your registration process`,
@@ -73,15 +101,15 @@ module.exports = {
                     email: resultRes[0].email,
                     username: resultRes[0].username,
                     role: resultRes[0].role,
-                    isVerified: resultRes[0].verified
-                  }
-                })
-              })
-            })
+                    isVerified: resultRes[0].verified,
+                  },
+                });
+              });
+            });
           }
-        })
+        });
       }
-    })
+    });
   },
   loginUser: (req, res) => {
     //Hashing password to match MySQL data:
@@ -111,7 +139,7 @@ module.exports = {
           fullname,
           address,
           birthdate,
-          pitcure_link,
+          picture_link,
         } = results[0];
 
         //create TOKEN -- will save on local storage via FE
@@ -126,7 +154,7 @@ module.exports = {
           fullname,
           address,
           birthdate,
-          pitcure_link,
+          picture_link,
         });
         if (verified != "true") {
           res.status(200).send({ message: "Your account is not verified" });
@@ -177,27 +205,51 @@ module.exports = {
     let updateQueryVerified = `update users set verified = 'true' where id_user = ${db.escape(req.user.id_user)}`
     db.query(updateQueryVerified, (errUpdate, resultUpdate) => {
       if (errUpdate) {
-        console.log(`error : ${errUpdate}`)
+        console.log(`error : ${errUpdate}`);
         return res.status(500).send({
           message: "Internal Server Error",
-          error: errUpdate
-        })
+          error: errUpdate,
+        });
       }
       let selectQueryVerified = `select * from users where id_user = ${db.escape(req.user.id_user)}`
       db.query(selectQueryVerified, (errSelect, resultSelect) => {
         if (errSelect) {
-          console.log(`error : ${errSelect}`)
+          console.log(`error : ${errSelect}`);
           return res.status(500).send({
             message: "Internal Server Error",
             error: errSelect,
-          })
+          });
         }
 
-        let { id_user, username, email, password, role, verified, gender, fullname, address, birthdate, picture_link } = resultSelect[0]
+        let {
+          id_user,
+          username,
+          email,
+          password,
+          role,
+          verified,
+          gender,
+          fullname,
+          address,
+          birthdate,
+          picture_link,
+        } = resultSelect[0];
 
-        let token = createToken({ id_user, username, email, password, role, verified, gender, fullname, address, birthdate, picture_link })
+        let token = createToken({
+          id_user,
+          username,
+          email,
+          password,
+          role,
+          verified,
+          gender,
+          fullname,
+          address,
+          birthdate,
+          picture_link,
+        });
 
-        console.log(`token after update status to verified : ${token}`)
+        console.log(`token after update status to verified : ${token}`);
 
         res.status(200).send({
           message: "verified account",
