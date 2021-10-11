@@ -7,7 +7,7 @@ module.exports = {
   registerUser: (req, res) => {
     let { email, username, password } = req.body
     password = Crypto.createHmac("sha1", process.env.SHARED_KEY).update(password).digest('hex') //hash password before save to db
-    checkUserQuery = `select * from users where email = "${email}"`
+    checkUserQuery = `select * from users where email = "${db.escape(email)}"`
     db.query(checkUserQuery, (checkErr, checkResult) => {
       if (checkErr) {
         return res.status(500).send({
@@ -31,7 +31,7 @@ module.exports = {
             })
           }
           if (result.insertId) {
-            let selectQuery = `select * from users where id_user = ${result.insertId}`
+            let selectQuery = `select * from users where id_user = ${db.escape(result.insertId)}`
             db.query(selectQuery, (errRes, resultRes) => {
               if (errRes) {
                 res.status(500).send("internal server error")
@@ -174,7 +174,7 @@ module.exports = {
     });
   },
   verification: (req, res) => {
-    let updateQueryVerified = `update users set verified = 'true' where id_user = ${req.user.id_user}`
+    let updateQueryVerified = `update users set verified = 'true' where id_user = ${db.escape(req.user.id_user)}`
     db.query(updateQueryVerified, (errUpdate, resultUpdate) => {
       if (errUpdate) {
         console.log(`error : ${errUpdate}`)
@@ -183,7 +183,7 @@ module.exports = {
           error: errUpdate
         })
       }
-      let selectQueryVerified = `select * from users where id_user = ${req.user.id_user}`
+      let selectQueryVerified = `select * from users where id_user = ${db.escape(req.user.id_user)}`
       db.query(selectQueryVerified, (errSelect, resultSelect) => {
         if (errSelect) {
           console.log(`error : ${errSelect}`)
@@ -206,5 +206,53 @@ module.exports = {
         })
       })
     })
-  }
+  },
+  getUserProfile: (req,res) => {
+    let selectQueryUser = `select * from users where id_user = ${db.escape(req.params.id)}`
+    db.query(selectQueryUser, (errSelectUser,resSelectUser) => {
+        if(errSelectUser){
+            res.status(500).send({
+                message : "Failed get profile user",
+                error : errSelectUser
+            })
+        }
+        if(resSelectUser){
+            delete 
+            res.status(500).send({
+                message : "Success get profile user",
+                dataUser : resSelectUser[0]
+            })
+        }
+    })
+  },
+  updateUserProfile : (req,res) => {
+    let dataUpdate = []
+    for(let prop in req.body){
+        dataUpdate.push(`${prop} = ${db.escape(req.body[prop])}`)
+    }
+
+    let updateQuery = `update users set ${dataUpdate} where id_user = ${db.escape(req.body.id_user)}`
+
+    db.query(updateQuery, (errUpdate,resultUpdate) => {
+        if(err){
+            res.status(500).send({
+                message : "Failed update your profile",
+                error : errUpdate
+            })
+        } 
+        let selectUpdatedProfile = `select * from users where id_user = ${db.escape(req.body.id_user)}`
+        db.query(selectUpdatedProfile, (err, res) => {
+            if(err){
+                res.status(500).send({
+                    message : "Failed update your profile",
+                    error : errUpdate
+                })
+            }
+            res.status(200).send({
+                message : "Success updated your profile",
+                data : res
+            })
+        })
+    })   
+},
 };
