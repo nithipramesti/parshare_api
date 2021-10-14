@@ -2,6 +2,7 @@ const { db } = require("../database");
 const { createToken } = require("../helper/createToken");
 const Crypto = require("crypto");
 const transporter = require("../helper/nodemailer");
+const {changeFormatDate} = require('../helper/dateFormatter')
 
 module.exports = {
   registerUser: (req, res) => {
@@ -269,8 +270,7 @@ module.exports = {
             })
         }
         if(resSelectUser){
-            delete 
-            res.status(500).send({
+            res.status(200).send({
                 message : "Success get profile user",
                 dataUser : resSelectUser[0]
             })
@@ -286,23 +286,60 @@ module.exports = {
     let updateQuery = `update users set ${dataUpdate} where id_user = ${db.escape(req.body.id_user)}`
 
     db.query(updateQuery, (errUpdate,resultUpdate) => {
-        if(err){
+        if(errUpdate){
             res.status(500).send({
                 message : "Failed update your profile",
                 error : errUpdate
             })
         } 
         let selectUpdatedProfile = `select * from users where id_user = ${db.escape(req.body.id_user)}`
-        db.query(selectUpdatedProfile, (err, res) => {
-            if(err){
+        db.query(selectUpdatedProfile, (errSelect, resSelect) => {
+            if(errSelect){
                 res.status(500).send({
                     message : "Failed update your profile",
-                    error : errUpdate
+                    error : errSelect
                 })
             }
+
+            
+            let {
+              id_user,
+              username,
+              email,
+              password,
+              role,
+              verified,
+              gender,
+              fullname,
+              address,
+              birthdate,
+              picture_link,
+            } = resSelect[0];
+
+            let token = createToken({
+              id_user,
+              username,
+              email,
+              password,
+              role,
+              verified,
+              gender,
+              fullname,
+              address,
+              birthdate,
+              picture_link,
+            })
+
+            let newBirthdate = changeFormatDate(resSelect[0].birthdate)
+
+            resSelect[0].birthdate = newBirthdate
+
+            console.log(resSelect[0])
+
             res.status(200).send({
                 message : "Success updated your profile",
-                data : res
+                data : resSelect[0],
+                token
             })
         })
     })   
