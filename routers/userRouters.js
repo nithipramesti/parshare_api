@@ -7,10 +7,8 @@ const { authToken, auth } = require("../helper/authToken");
 routers.post('/register', userControllers.registerUser)
 routers.post("/login", userControllers.loginUser);
 routers.post("/keep-login", authToken, userControllers.keepLogin);
-
-//Insert routers here
-routers.post('/register', userControllers.registerUser)
 routers.patch('/verified', auth, userControllers.verification)
-
+routers.get('/getprofile/:id',userControllers.getUserProfile)
+routers.patch('/updateprofile/',userControllers.updateUserProfile)
 
 module.exports = routers;
