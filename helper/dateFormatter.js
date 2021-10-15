@@ -13,7 +13,7 @@ module.exports = {
         month = '0' + month;
         }
         
-        let newDate = `${dt}/${month}/${year}`
+        let newDate = `${year}-${month}-${dt}`
         console.log(newDate)
     
         return newDate    

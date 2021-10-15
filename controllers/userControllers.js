@@ -157,6 +157,11 @@ module.exports = {
           birthdate,
           picture_link,
         });
+
+        let newBirthdate = changeFormatDate(results[0].birthdate)
+
+        results[0].birthdate = newBirthdate
+
         if (verified != "true") {
           res.status(200).send({ message: "Your account is not verified" });
         } else {
