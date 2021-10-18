@@ -232,10 +232,12 @@ module.exports = {
           if (err) {
             return res.status(500).send({
               success: false,
-              data: err
-            })
+              data: err,
+            });
           } else {
-            let getQuery = `select * from products where id_product = ${db.escape(id)}`
+            let getQuery = `select * from products where id_product = ${db.escape(
+              id
+            )}`;
             db.query(getQuery, (err2, result2) => {
               if (err2) {
                 return res.status(500).send({
@@ -262,7 +264,9 @@ module.exports = {
   deleteProduct: (req, res) => {
     if (req.user.role === "admin") {
       if (req.query.id) {
-        let deleteQuery = `update products set active = 'false' where id_product = ${db.escape(req.query.id)}`
+        let deleteQuery = `update products set active = 'false' where id_product = ${db.escape(
+          req.query.id
+        )}`;
         db.query(deleteQuery, (err, result) => {
           if (err) {
             return res.status(500).send({

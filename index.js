@@ -23,7 +23,8 @@ const {
   parcelRouters,
   productRouters,
   transactionRouters,
-  categoryRouters
+  categoryRouters,
+  cartRouters,
 } = require("./routers");
 
 app.use("/users", userRouters);
@@ -32,5 +33,6 @@ app.use("/parcels", parcelRouters);
 app.use("/products", productRouters);
 app.use("/transactions", transactionRouters);
 app.use("/categories", categoryRouters);
+app.use("/cart", cartRouters);
 
 app.listen(PORT, () => console.log("Api Running :", PORT));
