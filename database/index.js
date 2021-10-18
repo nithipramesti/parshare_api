@@ -20,4 +20,21 @@ db.getConnection((err) => {
   console.log(`Connected to MySQL Server`);
 });
 
+// const db = mysql.createConnection({
+//   host : 'localhost',
+//   user : 'root',
+//   password : 'perbanas',
+//   database : 'db_parshare',
+//   port : 3306,
+//   multipleStatements: true
+// })
+
+// db.connect((err) => {
+//   if(err){
+//       return console.log("Error: ",err)
+//   }else{
+//       return console.log("success connect to database")
+//   }
+// })
+
 module.exports = { db };

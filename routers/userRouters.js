@@ -9,6 +9,7 @@ routers.post("/login", userControllers.loginUser);
 routers.post("/keep-login", authToken, userControllers.keepLogin);
 routers.patch('/verified', auth, userControllers.verification)
 routers.get('/getprofile/:id',userControllers.getUserProfile)
-routers.patch('/updateprofile/',userControllers.updateUserProfile)
+routers.patch('/updateprofile',userControllers.updateUserProfile)
+routers.patch('/uploadprofile',userControllers.uploadProfilePict)
 
 module.exports = routers;
