@@ -99,29 +99,25 @@ module.exports = {
     });
   },
   addProduct: (req, res) => {
-    if (req.user.role === "admin") {
-      let { name, price, category, quantity } = JSON.parse(req.body.data);
-      if (name && price && category && quantity && req.files) {
-        try {
-          let path = "/images";
-          const upload = uploader(path, "IMG").fields([{ name: "file" }]);
-
-          upload(req, res, (error) => {
-            if (error) {
-              console.log(error);
-              res.status(500).send(error);
-            }
-
-            const { file } = req.files;
-            const filepath = file ? path + "/" + file[0].filename : null;
-            let data = JSON.parse(req.body.data);
-            data.image = filepath;
-
-            let addQuery = `insert into products values (null, ${db.escape(
-              name
-            )}, ${db.escape(filepath)}, ${db.escape(price)}, ${db.escape(
-              category
-            )}, ${db.escape(quantity)}, 'true')`;
+    if(req.user.role === 'admin'){
+      try {
+        let path = '/images'
+        const upload = uploader(path, 'IMG').fields([{ name: 'file' }])
+        
+        upload(req, res, (error) => {
+          if (error) {
+            console.log(error)
+            res.status(500).send(error)
+          }
+          
+          const { file } = req.files
+          const filepath = file ? path + '/' + file[0].filename : null
+          let data = JSON.parse(req.body.data)
+          data.image = filepath
+          let { name, price, category, quantity } = JSON.parse(req.body.data);
+          if(name && price && category && quantity && req.files) {
+          
+            let addQuery = `insert into products values (null, ${db.escape(name)}, ${db.escape(filepath)}, ${db.escape(price)}, ${db.escape(category)}, ${db.escape(quantity)}, 'true')`
             db.query(addQuery, (err, result) => {
               if (err) {
                 fs.unlinkSync("./public" + filepath);
@@ -146,20 +142,20 @@ module.exports = {
                   }
                 });
               }
-            });
-          });
-        } catch (error) {
-          console.log(error);
-          res.status(500).send({
-            success: false,
-            data: error,
-          });
-        }
-      } else {
+            })
+          }else{
+            res.status(500).send({
+              success: false,
+              data: "Missing query!"
+            })
+          }
+        })
+      } catch (error) {
+        console.log(error)
         res.status(500).send({
           success: false,
-          data: "Missing query!",
-        });
+          data: error
+        })
       }
     } else {
       return res.status(500).send({
@@ -169,37 +165,26 @@ module.exports = {
     }
   },
   editProduct: (req, res) => {
-    if (req.user.role === "admin") {
-      console.log(req);
-      let { id, name, price, category, quantity } = JSON.parse(req.body.data);
-      if (id && name && category && quantity && req.files) {
-        try {
-          let path = "/images";
-          const upload = uploader(path, "IMG").fields([{ name: "file" }]);
+    if(req.user.role === "admin"){
+      try {
+        let path = '/images'
+        const upload = uploader(path, 'IMG').fields([{ name: 'file' }])
+        
+        upload(req, res, (error) => {
+          if (error) {
+            console.log(error)
+            res.status(500).send(error)
+          }
+          
+          const { file } = req.files
+          const filepath = file ? path + '/' + file[0].filename : null
+          let data = JSON.parse(req.body.data)
+          data.image = filepath
+          let { id, name, price, category, quantity, image } = JSON.parse(req.body.data);
+          if(id && name && category && quantity && req.files) {
 
-          upload(req, res, (error) => {
-            if (error) {
-              console.log(error);
-              res.status(500).send(error);
-            }
-
-            const { file } = req.files;
-            const filepath = file ? path + "/" + file[0].filename : null;
-            let data = JSON.parse(req.body.data);
-            data.image = filepath;
-
-            fs.unlinkSync("./public" + image);
-            let updateQuery = `update products set product_name = ${db.escape(
-              name
-            )}, product_price = ${db.escape(
-              price
-            )}, image_product = ${db.escape(
-              filepath
-            )}, id_category = ${db.escape(
-              category
-            )}, product_quantity = ${db.escape(
-              quantity
-            )} where id_product = ${db.escape(id)}`;
+            fs.unlinkSync('./public' + image);
+            let updateQuery = `update products set product_name = ${db.escape(name)}, product_price = ${db.escape(price)}, image_product = ${db.escape(filepath)}, id_category = ${db.escape(category)}, product_quantity = ${db.escape(quantity)} where id_product = ${db.escape(id)}`
             db.query(updateQuery, (err2, result2) => {
               if (err2) {
                 fs.unlinkSync("./public" + filepath);
@@ -212,48 +197,40 @@ module.exports = {
                   status: true,
                 });
               }
-            });
-          });
-        } catch (error) {
-          console.log(error);
-          res.status(500).send({
-            success: false,
-            data: error,
-          });
-        }
-      } else if (id && name && category && quantity) {
-        let updateQuery = `update products set product_name = ${db.escape(
-          name
-        )}, product_price = ${db.escape(price)}, id_category = ${db.escape(
-          category
-        )}, product_quantity = ${db.escape(
-          quantity
-        )} where id_product = ${db.escape(id)}`;
-        db.query(updateQuery, (err, result) => {
-          if (err) {
-            return res.status(500).send({
-              success: false,
-              data: err,
-            });
-          } else {
-            let getQuery = `select * from products where id_product = ${db.escape(
-              id
-            )}`;
-            db.query(getQuery, (err2, result2) => {
-              if (err2) {
+            })
+          }else if(id && name && category && quantity){
+            let updateQuery = `update products set product_name = ${db.escape(name)}, product_price = ${db.escape(price)}, id_category = ${db.escape(category)}, product_quantity = ${db.escape(quantity)} where id_product = ${db.escape(id)}`
+            db.query(updateQuery, (err, result) => {
+              if(err){
                 return res.status(500).send({
                   success: false,
-                  data: err2,
-                });
-              } else {
-                return res.status(200).send({
-                  success: true,
-                  data: result2[0],
-                });
+                  data: err
+                })
+              }else{
+                let getQuery = `select * from products where id_product = ${db.escape(id)}`
+                db.query(getQuery, (err2, result2) => {
+                  if(err2){
+                    return res.status(500).send({
+                      success: false,
+                      data: err2
+                    })
+                  }else{
+                    return res.status(200).send({
+                      success: true,
+                      data: result2[0]
+                    })
+                  }
+                })
               }
             });
           }
-        });
+        })
+      } catch (error) {
+        console.log(error)
+        res.status(500).send({
+          success: false,
+          data: error
+        })
       }
     } else {
       return res.status(500).send({
