@@ -23,7 +23,7 @@ module.exports = {
     });
   },
   listParcel: (req, res) => {
-    let getQuery = `SELECT parcels.id_parcel as id, parcels.parcel_name, parcels.parcel_price, parcels.margin, parcels.image_parcel, parcels.description, parcels.active, GROUP_CONCAT(categories.category SEPARATOR',') as categories, GROUP_CONCAT(parcel_categories.parcelcategory_quantity SEPARATOR',') as quantities FROM parcels JOIN parcel_categories ON parcel_categories.id_parcel = parcels.id_parcel JOIN categories ON parcel_categories.id_category = categories.id_category GROUP BY parcels.id_parcel, parcels.parcel_name, parcels.image_parcel`
+    let getQuery = `SELECT parcels.id_parcel as id,parcels.id_parcel, parcels.parcel_name, parcels.parcel_price, parcels.margin, parcels.image_parcel, parcels.description, parcels.active, GROUP_CONCAT(categories.category SEPARATOR',') as categories, GROUP_CONCAT(parcel_categories.parcelcategory_quantity SEPARATOR',') as quantities FROM parcels JOIN parcel_categories ON parcel_categories.id_parcel = parcels.id_parcel JOIN categories ON parcel_categories.id_category = categories.id_category GROUP BY parcels.id_parcel, parcels.parcel_name, parcels.image_parcel`
     db.query(getQuery, (err, result) => {
       if(err){
         return res.status(500).send({
@@ -186,4 +186,97 @@ module.exports = {
       });
     }
   },
+  editParcel: (req, res) => {
+    if (req.user.role === "admin") {
+      try {
+        let path = "/images";
+        const upload = uploader(path, "IMG").fields([{ name: "file" }]);
+
+        upload(req, res, (error) => {
+          if (error) {
+            console.log(error);
+            res.status(500).send(error);
+          }
+          const { file } = req.files;
+          const filepath = file ? path + "/" + file[0].filename : null;
+          let data = JSON.parse(req.body.data);
+          console.log(`data:`,data)
+          let {id, category, name, description, margin, price, image} = data
+          image = filepath;
+          console.log(`image: `,image)
+          
+          if(id && category && name && description && margin && price && image){
+            let deleteCategoryQuery = `DELETE FROM parcel_categories WHERE id_parcel = ${id}`
+            db.query(deleteCategoryQuery,(err,result) => {
+              if (err) {
+                return res.status(500).send({
+                  success: false,
+                  data: err,
+                });
+              } 
+              let editParcelQuery = `update parcels set parcel_name=${db.escape(name)}, parcel_price=${(db.escape(price))}, margin=${db.escape(margin)},image_parcel=${(db.escape(filepath))}, description=${db.escape(description)} where id_parcel=${(id)}`;
+              db.query(editParcelQuery, (errEditParcelQuery, resulteditParcelQuery) => {
+                if (errEditParcelQuery) {
+                  fs.unlinkSync("./public" + filepath);
+                  return res.status(500).send({
+                    success: false,
+                    data: errEditParcelQuery,
+                  });
+                } 
+                if (id) {
+                  for(let i = 0;i<data.category.length;i++){
+                    let id_category = parseInt(data.category[i].category)
+                    let quantity = parseInt(data.category[i].category)
+                    let addCategoryQuery = `insert into parcel_categories values (null, ${db.escape(id)}, ${db.escape(id_category)}, ${db.escape(quantity)})`
+                    console.log(`addCategoryQuery ke-${i} : ${addCategoryQuery}`)
+                    db.query(addCategoryQuery, (errCategoryQuery, resultCategoryQuery) => {
+                      if (errCategoryQuery) {
+                        fs.unlinkSync("./public" + filepath);
+                        return res.status(500).send({
+                          success: false,
+                          data: errCategoryQuery,
+                        });
+                      }
+                    });
+                  }
+                  
+                  let getQueryParcels = `select * from parcels where id_parcel='${id}'`;
+                  db.query(getQueryParcels, (errGetParcel, resultGetParcel) => {
+                    if (errGetParcel) {
+                      fs.unlinkSync("./public" + filepath);
+                      return res.status(500).send({
+                        success: false,
+                        data: errGetParcel,
+                      });
+                    } else {
+                      return res.status(200).send({
+                        success: true,
+                        data: resultGetParcel[0],
+                      });
+                    }
+                  });
+                }
+              });
+            })
+          }else{
+            res.status(500).send({
+              success: false,
+              data: "Missing query!",
+            });
+          }
+        });
+      } catch (error) {
+        console.log(error);
+        res.status(500).send({
+          success: false,
+          data: error,
+        });
+      }
+  } else {
+    return res.status(500).send({
+      success: false,
+      data: "User not allowed!",
+    });
+  }
+  }
 }

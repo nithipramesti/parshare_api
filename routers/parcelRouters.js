@@ -8,5 +8,6 @@ routers.get('/list', parcelControllers.listParcel)
 routers.get('/get', parcelControllers.getParcel)
 routers.post('/add', auth, parcelControllers.addParcel)
 routers.delete("/delete", auth, parcelControllers.deleteParcel)
+routers.patch("/edit", auth, parcelControllers.editParcel);
 
 module.exports = routers;
