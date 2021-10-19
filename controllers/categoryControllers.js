@@ -1,6 +1,22 @@
 const { db } = require("../database");
 
 module.exports = {
+  averagePrice: (req, res) => {
+    let getQuery = `SELECT db_parshare.products.id_category, db_parshare.categories.category, AVG(db_parshare.products.product_price) as average_price FROM db_parshare.products JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category WHERE db_parshare.products.active = "true" and db_parshare.categories.active = "true" GROUP BY db_parshare.categories.id_category;`
+    db.query(getQuery, (err, result) => {
+      if(err){
+        return res.status(500).send({
+          success: false,
+          data: err
+        })
+      }else{
+        return res.status(200).send({
+          success: true,
+          data: result
+        })
+      }
+    })
+  },
   listCategory: (req, res) => {
     if(req.query.type === "total"){
       let getQuery = `SELECT categories.id_category, categories.category, count(*) as total FROM categories INNER JOIN products ON categories.id_category = products.id_category GROUP BY categories.id_category;`
