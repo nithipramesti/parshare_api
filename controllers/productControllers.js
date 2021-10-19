@@ -23,7 +23,7 @@ module.exports = {
     //Get parcel categories & qty
     const id_parcel = req.params.id_parcel;
 
-    let getCategoriesQuery = `SELECT p.parcel_name, c.id_category, c.category, pc.parcelcategory_quantity
+    let getCategoriesQuery = `SELECT p.parcel_name, p.parcel_price, c.id_category, c.category, pc.parcelcategory_quantity
     FROM parcels p 
     JOIN parcel_categories pc ON p.id_parcel = pc.id_parcel
     JOIN categories c ON pc.id_category = c.id_category
@@ -43,7 +43,7 @@ module.exports = {
         });
 
         //Get products with parcel's categories
-        let getProductsQuery = `SELECT p.id_product, p.product_name, p.image_product, p.product_quantity, c.category FROM products p
+        let getProductsQuery = `SELECT p.id_product, p.product_name, p.image_product, p.product_quantity, p.description, c.category FROM products p
         JOIN categories c ON p.id_category = c.id_category WHERE (${id_categoriesQuery.join(
           " OR "
         )}) AND p.active = 'true';`;
@@ -60,6 +60,7 @@ module.exports = {
 
             //Set parcel name
             obj.name = parcelData[0].parcel_name;
+            obj.price = parcelData[0].parcel_price;
 
             //Set parcel categories quantity
             obj.categories = {};
