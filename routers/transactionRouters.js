@@ -2,6 +2,6 @@ const express = require("express");
 const routers = express.Router();
 const { transactionControllers } = require("../controllers");
 
-//Insert routers here
+routers.get("/getAll", transactionControllers.getAll);
 
 module.exports = routers;
