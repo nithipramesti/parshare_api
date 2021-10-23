@@ -9,5 +9,6 @@ routers.get('/get', parcelControllers.getParcel)
 routers.post('/add', auth, parcelControllers.addParcel)
 routers.delete("/delete", auth, parcelControllers.deleteParcel)
 routers.patch("/edit", auth, parcelControllers.editParcel);
+routers.get("/revenue", auth, parcelControllers.revenueParcel);
 
 module.exports = routers;
