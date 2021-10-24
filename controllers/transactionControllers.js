@@ -120,6 +120,7 @@ module.exports = {
             res.status(500).send({ errMessage: "Internal server error" });
 
           if (results) {
+            //Status changed
             console.log("Status changed");
             res.status(200).send({ message: "Status changed" });
           }
