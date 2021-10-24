@@ -93,6 +93,35 @@ module.exports = {
     });
   },
 
+  parcelList: (req, res) => {
+    //MySQL query to check token data
+    let checkTokenQuery = `Select * from users where email=${db.escape(
+      req.dataDecode.email
+    )} ;`;
+
+    //Send query to MySQL
+    db.query(checkTokenQuery, (err, resultToken) => {
+      if (err) res.status(500).send({ errMessage: "Internal server error" });
+
+      if (resultToken[0].role === "admin") {
+        console.log(`Admin confirmed with email: ${resultToken[0].email}`);
+
+        let getParcelQuery = `SELECT parcels.parcel_name FROM parcels;`;
+
+        db.query(getParcelQuery, (err, parcelList) => {
+          if (err) {
+            res.status(500).send({ errMessage: "Internal server error" });
+          }
+
+          if (parcelList) {
+            console.log(parcelList);
+            res.status(200).send({ parcelList });
+          }
+        });
+      }
+    });
+  },
+
   confirmation: (req, res) => {
     console.log(req.body);
 
@@ -153,38 +182,39 @@ module.exports = {
         ),
         income,
         db_parshare.transactions.transaction_totalprice;`;
-        
+
       db.query(scriptQuery, (err, results) => {
-        if (err){ 
+        if (err) {
           res.status(500).send({
             success: false,
             data: error,
           });
         } else {
           const d = new Date();
-          let data = []
-          d.setMonth(d.getMonth()+1)
-          for(let i = 0; i < 30; i++){
-            const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
-            
-            for(let j = 0; j < results.length; j++){
-              if(results[j].date === dateFormat){
+          let data = [];
+          d.setMonth(d.getMonth() + 1);
+          for (let i = 0; i < 30; i++) {
+            const dateFormat =
+              d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+
+            for (let j = 0; j < results.length; j++) {
+              if (results[j].date === dateFormat) {
                 data.push({
-                  ...results[j]
-                })
-                break
-              }else{
+                  ...results[j],
+                });
+                break;
+              } else {
                 data.push({
                   date: dateFormat,
                   income: 0,
-                  totalPrice: 0
-                })
-                break
+                  totalPrice: 0,
+                });
+                break;
               }
             }
-            d.setDate(d.getDate()-1)
+            d.setDate(d.getDate() - 1);
           }
-          if(data.length === 30){
+          if (data.length === 30) {
             return res.status(200).send({
               success: true,
               data,
@@ -204,18 +234,18 @@ module.exports = {
       //Send query to MySQL
       let getTransactionQuery = `SELECT t.id_transaction, t.id_user, u.fullname, t.transaction_date, 
       t.transaction_totalprice, t.income, t.image_userpayment, t.status
-      FROM transactions t JOIN users u ON t.id_user = u.id_user and t.id_user = ${db.escape(req.user.id_user)} order by t.id_transaction desc;`;
+      FROM transactions t JOIN users u ON t.id_user = u.id_user and t.id_user = ${db.escape(
+        req.user.id_user
+      )} order by t.id_transaction desc;`;
 
-
-      console.log(`getTransactionQuery`,getTransactionQuery)
+      console.log(`getTransactionQuery`, getTransactionQuery);
       db.query(getTransactionQuery, (err, transactionsData) => {
-        console.log(`transactionsData`,transactionsData)
+        console.log(`transactionsData`, transactionsData);
         if (err) {
           res.status(500).send({ errMessage: "Internal server error" });
         }
 
         if (transactionsData) {
-          
           transactionsData.forEach((transaction) => {
             transaction.parcels = [];
           });
@@ -279,7 +309,7 @@ module.exports = {
           }
         });
       });
-    }else{
+    } else {
       return res.status(500).send({
         success: false,
         data: "User not allowed!",
@@ -301,11 +331,13 @@ module.exports = {
 
           const { file } = req.files;
           const filepath = file ? path + "/" + file[0].filename : null;
-          console.log(`filepath:${filepath}`)
+          console.log(`filepath:${filepath}`);
           let data = JSON.parse(req.body.data);
-          console.log(`data: ${JSON.stringify(data)}`)
+          console.log(`data: ${JSON.stringify(data)}`);
 
-          let updateQuery = `update transactions set image_userpayment = ${db.escape(filepath)} where id_transaction = ${db.escape(data.id_transaction)}`;
+          let updateQuery = `update transactions set image_userpayment = ${db.escape(
+            filepath
+          )} where id_transaction = ${db.escape(data.id_transaction)}`;
           db.query(updateQuery, (errUpdate, resultUpdate) => {
             if (errUpdate) {
               fs.unlinkSync("./public" + filepath);
@@ -316,7 +348,7 @@ module.exports = {
             }
             return res.status(200).send({
               success: true,
-              message : "Success Upload Bukti Transfer"
+              message: "Success Upload Bukti Transfer",
             });
           });
         });
@@ -327,12 +359,11 @@ module.exports = {
           message: error,
         });
       }
-    }else{
+    } else {
       return res.status(500).send({
         success: false,
         data: "User not allowed!",
       });
     }
-
-  }
-}
+  },
+};
