@@ -38,6 +38,7 @@ module.exports = {
 
             res.status(200).send({
               message: "Parcel added to cart",
+              data : id_cart
             });
           } else {
             console.log("NOT SUCCESS");
@@ -223,6 +224,51 @@ module.exports = {
           }
         });
       }
+    });
+  },
+
+  edit: (req, res) => {
+    console.log(req.body);
+
+    const { id_user, id_cart, id_parcel, products } = req.body;
+
+    let deleteQuery = `DELETE FROM cart_products WHERE id_cart = ${db.escape(id_cart)}`;
+
+    console.log(`deleteQuery: `,deleteQuery)
+
+    db.query(deleteQuery, (errDeleteQuery, resultDeleteQuery) => {
+      if (errDeleteQuery) {
+        res.status(500).send({ errMessage: "Internal server error" });
+      }
+      
+      let productsInsertQuery = [];
+      products.forEach((val) => {
+        productsInsertQuery.push(
+          `(null, ${id_cart}, ${val.id_product}, ${val.selected})`
+        );
+      });
+
+      let editCartProductsQuery = `INSERT INTO cart_products VALUES
+      ${productsInsertQuery.join(", ")}`;
+
+      console.log(`editCartProductsQuery: `,editCartProductsQuery)
+
+      db.query(editCartProductsQuery, (errEditCartProductsQuery, resultsEditCartProductsQuery) => {
+        if (errEditCartProductsQuery) {
+          res.status(500).send({ errMessage: "Internal server error" });
+        }
+
+        if (resultsEditCartProductsQuery) {
+          console.log("SUCCESS");
+
+          res.status(200).send({
+            message: "Edit Cart Success",
+            data : products
+          });
+        } else {
+          console.log("NOT SUCCESS");
+        }
+      });
     });
   },
 };

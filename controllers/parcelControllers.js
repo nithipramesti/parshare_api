@@ -102,8 +102,13 @@ module.exports = {
                 });
               } else if (resultParcelQuery.insertId) {
                 for(let i = 0;i<data.category.length;i++){
-                  let id_category = parseInt(data.category[i].category)
-                  let quantity = parseInt(data.category[i].category)
+                  if(data.category[i].category === ""){
+                    id_category = 1
+                  }else{
+                    id_category = parseInt(data.category[i].category)
+                  }
+
+                  let quantity = parseInt(data.category[i].quantity)
                   let addCategoryQuery = `insert into parcel_categories values (null, ${db.escape(resultParcelQuery.insertId)}, ${db.escape(id_category)}, ${db.escape(quantity)})`
                   console.log(`addCategoryQuery ke-${i} : ${addCategoryQuery}`)
                   db.query(addCategoryQuery, (errCategoryQuery, resultCategoryQuery) => {
@@ -226,8 +231,12 @@ module.exports = {
                 } 
                 if (id) {
                   for(let i = 0;i<data.category.length;i++){
-                    let id_category = parseInt(data.category[i].category)
-                    let quantity = parseInt(data.category[i].category)
+                    if(data.category[i].category === ""){
+                      id_category = 1
+                    }else{
+                      id_category = parseInt(data.category[i].category)
+                    }
+                    let quantity = parseInt(data.category[i].quantity)
                     let addCategoryQuery = `insert into parcel_categories values (null, ${db.escape(id)}, ${db.escape(id_category)}, ${db.escape(quantity)})`
                     console.log(`addCategoryQuery ke-${i} : ${addCategoryQuery}`)
                     db.query(addCategoryQuery, (errCategoryQuery, resultCategoryQuery) => {

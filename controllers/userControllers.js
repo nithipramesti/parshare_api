@@ -191,6 +191,10 @@ module.exports = {
     db.query(scriptQuery, (err, results) => {
       if (err) res.status(500).send({ errMessage: "Internal server error" });
 
+      let newBirthdate = changeFormatDate(results[0].birthdate)
+
+      results[0].birthdate = newBirthdate
+
       if (results[0]) {
         console.log(
           `Data from token matches the database, keep user '${results[0].username}' logged in`
