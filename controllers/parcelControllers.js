@@ -324,21 +324,30 @@ module.exports = {
             for(let i = 0; i < 30; i++){
               const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
 
-              for(let j = 0; j < results.length; j++){
-                if(results[j].date === dateFormat){
-                  data.push({
-                    ...results[j]
-                  })
-                  break
-                }else{
-                  data.push({
-                    date: dateFormat,
-                    total: 0,
-                    totalPrice: 0,
-                    totalMargin: 0
-                  })
-                  break
+              if(results.length > 0){
+                for(let j = 0; j < results.length; j++){
+                  if(results[j].date === dateFormat){
+                    data.push({
+                      ...results[j]
+                    })
+                    break
+                  }else{
+                    data.push({
+                      date: dateFormat,
+                      total: 0,
+                      totalPrice: 0,
+                      totalMargin: 0
+                    })
+                    break
+                  }
                 }
+              }else{
+                data.push({
+                  date: dateFormat,
+                  total: 0,
+                  totalPrice: 0,
+                  totalMargin: 0
+                })
               }
               d.setDate(d.getDate()-1)
             }
