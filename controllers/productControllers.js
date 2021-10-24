@@ -4,7 +4,12 @@ const fs = require("fs");
 
 module.exports = {
   listProduct: (req, res) => {
-    let getQuery = `SELECT id_product as id, id_product, product_name, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category`;
+    let getQuery;
+    if(req.query.id && !isNaN(req.query.id)){
+      getQuery = `SELECT id_product as id, id_product, product_name, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category WHERE db_parshare.categories.id_category = ${req.query.id}`;
+    }else if(!req.query.id || (req.query.id && isNaN(req.query.id))){
+      getQuery = `SELECT id_product as id, id_product, product_name, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category`;
+    }
     db.query(getQuery, (err, result) => {
       if (err) {
         return res.status(500).send({
