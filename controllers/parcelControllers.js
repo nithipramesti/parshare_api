@@ -339,15 +339,17 @@ module.exports = {
                     data.push({
                       ...results[j]
                     })
-                    break
                   }else{
-                    data.push({
-                      date: dateFormat,
-                      total: 0,
-                      totalPrice: 0,
-                      totalMargin: 0
-                    })
-                    break
+                    let search = results.find(res => res.date === dateFormat);
+                    if(!search){
+                      data.push({
+                        date: dateFormat,
+                        total: 0,
+                        totalPrice: 0,
+                        totalMargin: 0
+                      })
+                      break
+                    }
                   }
                 }
               }else{

@@ -163,7 +163,7 @@ module.exports = {
         } else {
           const d = new Date();
           let data = []
-          d.setMonth(d.getMonth()+1)
+          d.setMonth(d.getMonth()+1);
           for(let i = 0; i < 30; i++){
             const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
             
@@ -172,14 +172,16 @@ module.exports = {
                 data.push({
                   ...results[j]
                 })
-                break
               }else{
-                data.push({
-                  date: dateFormat,
-                  income: 0,
-                  totalPrice: 0
-                })
-                break
+                let search = results.find(res => res.date === dateFormat);
+                if(!search){
+                  data.push({
+                    date: dateFormat,
+                    income: 0,
+                    totalPrice: 0
+                  })
+                  break
+                }
               }
             }
             d.setDate(d.getDate()-1)
