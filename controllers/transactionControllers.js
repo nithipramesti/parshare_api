@@ -150,9 +150,7 @@ module.exports = {
         date_format(
           db_parshare.transactions.transaction_date,
           '%Y-%m-%d'
-        ),
-        income,
-        db_parshare.transactions.transaction_totalprice;`;
+        );`;
         
       db.query(scriptQuery, (err, results) => {
         if (err){ 
@@ -161,22 +159,25 @@ module.exports = {
             data: error,
           });
         } else {
+          const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
           const d = new Date();
           let data = []
           d.setMonth(d.getMonth()+1);
           for(let i = 0; i < 30; i++){
             const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+            const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
             
             for(let j = 0; j < results.length; j++){
               if(results[j].date === dateFormat){
                 data.push({
-                  ...results[j]
+                  ...results[j],
+                  date: dateFinal
                 })
               }else{
                 let search = results.find(res => res.date === dateFormat);
                 if(!search){
                   data.push({
-                    date: dateFormat,
+                    date: dateFinal,
                     income: 0,
                     totalPrice: 0
                   })
@@ -186,6 +187,7 @@ module.exports = {
             }
             d.setDate(d.getDate()-1)
           }
+          console.log(data.length)
           if(data.length === 30){
             return res.status(200).send({
               success: true,
