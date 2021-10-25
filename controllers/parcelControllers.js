@@ -308,7 +308,6 @@ module.exports = {
           JOIN db_parshare.parcels ON db_parshare.parcels.id_parcel = db_parshare.transaction_parcel.id_parcel
         WHERE
           db_parshare.transactions.transaction_date BETWEEN CURDATE() - INTERVAL 30 DAY
-          AND CURDATE()
           AND db_parshare.transactions.status = "confirmed"
           AND db_parshare.transaction_parcel.id_parcel = ${req.query.id}
         GROUP BY

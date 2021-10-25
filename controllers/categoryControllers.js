@@ -19,7 +19,7 @@ module.exports = {
   },
   listCategory: (req, res) => {
     if(req.query.type === "total"){
-      let getQuery = `SELECT categories.id_category, categories.category, count(*) as total FROM categories INNER JOIN products ON categories.id_category = products.id_category GROUP BY categories.id_category;`
+      let getQuery = `SELECT categories.id_category, categories.category, count(*) as total FROM categories INNER JOIN products ON categories.id_category = products.id_category WHERE db_parshare.categories.active = "true" GROUP BY categories.id_category ORDER BY total DESC;`
       db.query(getQuery, (err, result) => {
         if(err){
           return res.status(500).send({
@@ -34,7 +34,7 @@ module.exports = {
         }
       })
     }else{
-      let getQuery = `SELECT * FROM categories;
+      let getQuery = `SELECT * FROM categories WHERE db_parshare.categories.active = "true";
       `
       db.query(getQuery, (err, result) => {
         if(err){

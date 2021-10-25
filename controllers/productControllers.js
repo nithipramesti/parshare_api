@@ -119,10 +119,10 @@ module.exports = {
           const filepath = file ? path + '/' + file[0].filename : null
           let data = JSON.parse(req.body.data)
           data.image = filepath
-          let { name, price, category, quantity } = JSON.parse(req.body.data);
-          if(name && price && category && quantity && req.files) {
+          let { name, price, category, quantity, description } = JSON.parse(req.body.data);
+          if(name && price && category && quantity && description && req.files) {
           
-            let addQuery = `insert into products values (null, ${db.escape(name)}, ${db.escape(filepath)}, ${db.escape(price)}, ${db.escape(category)}, ${db.escape(quantity)}, 'true')`
+            let addQuery = `insert into products values (null, ${db.escape(name)}, ${db.escape(filepath)}, ${db.escape(price)}, ${db.escape(category)}, ${db.escape(quantity)}, 0, 'true', ${db.escape(description)})`
             db.query(addQuery, (err, result) => {
               if (err) {
                 fs.unlinkSync("./public" + filepath);
