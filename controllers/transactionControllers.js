@@ -297,7 +297,6 @@ module.exports = {
         db_parshare.transactions
       WHERE
         db_parshare.transactions.transaction_date BETWEEN CURDATE() - INTERVAL 30 DAY
-        AND CURDATE()
         AND db_parshare.transactions.status = "confirmed"
       GROUP BY
         date_format(
