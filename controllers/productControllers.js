@@ -6,9 +6,9 @@ module.exports = {
   listProduct: (req, res) => {
     let getQuery;
     if(req.query.id && !isNaN(req.query.id)){
-      getQuery = `SELECT id_product as id, id_product, product_name, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category WHERE db_parshare.categories.id_category = ${req.query.id}`;
+      getQuery = `SELECT id_product as id, id_product, product_name, db_parshare.products.description, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category WHERE db_parshare.categories.id_category = ${req.query.id}`;
     }else if(!req.query.id || (req.query.id && isNaN(req.query.id))){
-      getQuery = `SELECT id_product as id, id_product, product_name, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category`;
+      getQuery = `SELECT id_product as id, id_product, product_name, db_parshare.products.description, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category`;
     }
     db.query(getQuery, (err, result) => {
       if (err) {
@@ -186,10 +186,10 @@ module.exports = {
             const filepath = file ? path + '/' + file[0].filename : null
             let data = JSON.parse(req.body.data)
             data.image = filepath
-            let { id, name, price, category, quantity, image } = JSON.parse(req.body.data);
-            if(req.files && id && name && category && quantity && image && price){
+            let { id, name, price, description, category, quantity, image } = JSON.parse(req.body.data);
+            if(req.files && id && name && category && quantity && image && price && description){
               fs.unlinkSync('./public' + image);
-              let updateQuery = `update products set product_name = ${db.escape(name)}, product_price = ${db.escape(price)}, image_product = ${db.escape(filepath)}, id_category = ${db.escape(category)}, product_quantity = ${db.escape(quantity)} where id_product = ${db.escape(id)}`
+              let updateQuery = `update products set product_name = ${db.escape(name)}, product_price = ${db.escape(price)}, image_product = ${db.escape(filepath)}, id_category = ${db.escape(category)}, product_quantity = ${db.escape(quantity)}, description = ${db.escape(description)} where id_product = ${db.escape(id)}`
               db.query(updateQuery, (err2, result2) => {
                 if (err2) {
                   fs.unlinkSync("./public" + filepath);
@@ -218,9 +218,9 @@ module.exports = {
           })
         }
       }else if(req.body.id){
-        let { id, name, price, category, quantity } = req.body;
-        if(id && name && category && quantity && price){
-          let updateQuery = `update products set product_name = ${db.escape(name)}, product_price = ${db.escape(price)}, id_category = ${db.escape(category)}, product_quantity = ${db.escape(quantity)} where id_product = ${db.escape(id)}`
+        let { id, name, price, description, category, quantity } = req.body;
+        if(id && name && category && quantity && description && price){
+          let updateQuery = `update products set product_name = ${db.escape(name)}, product_price = ${db.escape(price)}, id_category = ${db.escape(category)}, product_quantity = ${db.escape(quantity)}, description = ${db.escape(description)} where id_product = ${db.escape(id)}`
           db.query(updateQuery, (err, result) => {
             if(err){
               return res.status(500).send({
