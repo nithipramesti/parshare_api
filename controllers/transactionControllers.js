@@ -162,6 +162,10 @@ module.exports = {
   },
   incomeTransaction: (req, res) => {
     if (req.user.role === "admin") {
+      let period = 30;
+      if(!isNaN(req.query.period)){
+        period = req.query.period;
+      }
       let scriptQuery = `SELECT
         date_format(
           db_parshare.transactions.transaction_date,
@@ -172,7 +176,7 @@ module.exports = {
       FROM
         db_parshare.transactions
       WHERE
-        db_parshare.transactions.transaction_date BETWEEN CURDATE() - INTERVAL 30 DAY
+        db_parshare.transactions.transaction_date BETWEEN CURDATE() - INTERVAL ${period} DAY
         AND db_parshare.transactions.status = "confirmed"
       GROUP BY
         date_format(
@@ -191,7 +195,7 @@ module.exports = {
           const d = new Date();
           let data = []
           d.setMonth(d.getMonth()+1);
-          for(let i = 0; i < 30; i++){
+          for(let i = 0; i < period; i++){
             const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
             const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
             
@@ -215,12 +219,10 @@ module.exports = {
             }
             d.setDate(d.getDate() - 1);
           }
-          if (data.length === 30) {
-            return res.status(200).send({
-              success: true,
-              data,
-            });
-          }
+          return res.status(200).send({
+            success: true,
+            data,
+          });
         }
       });
     } else {
