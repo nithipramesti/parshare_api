@@ -137,23 +137,147 @@ module.exports = {
       if (resultToken[0].role === "admin") {
         console.log(`Admin confirmed with email: ${resultToken[0].email}`);
 
-        //MySQL query to change transaction status
-        let confirmQuery = `UPDATE transactions SET status = '${
-          req.body.newStatus
-        }' WHERE id_transaction = ${db.escape(req.body.id_transaction)} ;`;
+        //Check newStatus = CONFIRM or REJECT
+        if (req.body.newStatus === "Confirmed") {
+          //Get all products from the parcels and count TOTAL quantity
+          let productAr = [];
+          req.body.parcels.forEach((parcel) => {
+            parcel.products.forEach((product) => {
+              //Check if product already in productAr
+              const indexFind = productAr.findIndex(
+                (el) => el.id_product === product.id_product
+              );
 
-        //Send query to MySQL
-        db.query(confirmQuery, (err, results) => {
-          console.log(`query sent: ${confirmQuery}`);
-          if (err)
-            res.status(500).send({ errMessage: "Internal server error" });
+              if (indexFind === -1) {
+                productAr.push(product);
+              } else {
+                //if product already in productAr, just add the quantity
+                productAr[indexFind].product_quantity +=
+                  product.product_quantity;
+              }
+            });
+          });
 
-          if (results) {
-            //Status changed
-            console.log("Status changed");
-            res.status(200).send({ message: "Status changed" });
-          }
-        });
+          console.log(productAr);
+
+          let bookedString = [];
+          let idProductsString = [];
+          productAr.forEach((val) => {
+            bookedString.push(
+              `WHEN id_product = ${val.id_product} THEN booked-${val.product_quantity}`
+            );
+            idProductsString.push(val.id_product);
+          });
+
+          let bookedQuery = `UPDATE products SET
+            booked = (CASE ${bookedString.join(" ")} END)
+            WHERE id_product IN (${idProductsString.join(", ")});`;
+
+          console.log(bookedQuery);
+
+          db.query(bookedQuery, (err, updateBooked) => {
+            console.log("query booked sent");
+            if (err) {
+              res.status(500).send({ errMessage: "Internal server error" });
+            }
+
+            if (updateBooked) {
+              console.log("booked Edited!");
+
+              // MySQL query to change transaction status
+              let confirmQuery = `UPDATE transactions SET status = '${
+                req.body.newStatus
+              }' WHERE id_transaction = ${db.escape(
+                req.body.id_transaction
+              )} ;`;
+
+              //Send query to MySQL
+              db.query(confirmQuery, (err, results) => {
+                console.log(`query sent: ${confirmQuery}`);
+                if (err)
+                  res.status(500).send({ errMessage: "Internal server error" });
+
+                if (results) {
+                  //Status changed
+                  console.log("Status changed");
+                  res.status(200).send({ message: "Status changed" });
+                }
+              });
+            }
+          });
+        } else if (req.body.newStatus === "Rejected") {
+          //Get all products from the parcels and count TOTAL quantity
+          let productAr = [];
+          req.body.parcels.forEach((parcel) => {
+            parcel.products.forEach((product) => {
+              //Check if product already in productAr
+              const indexFind = productAr.findIndex(
+                (el) => el.id_product === product.id_product
+              );
+
+              if (indexFind === -1) {
+                productAr.push(product);
+              } else {
+                //if product already in productAr, just add the quantity
+                productAr[indexFind].product_quantity +=
+                  product.product_quantity;
+              }
+            });
+          });
+
+          console.log(productAr);
+
+          let bookedString = [];
+          let productQtyString = [];
+          let idProductsString = [];
+          productAr.forEach((val) => {
+            bookedString.push(
+              `WHEN id_product = ${val.id_product} THEN booked-${val.product_quantity}`
+            );
+            productQtyString.push(
+              `WHEN id_product = ${val.id_product} THEN product_quantity+${val.product_quantity}`
+            );
+            idProductsString.push(val.id_product);
+          });
+
+          let bookedQuery = `UPDATE products SET
+            booked = (CASE ${bookedString.join(" ")} END),
+            product_quantity = (CASE ${productQtyString.join(" ")} END)
+            WHERE id_product IN (${idProductsString.join(", ")});`;
+
+          console.log(bookedQuery);
+
+          db.query(bookedQuery, (err, updateBooked) => {
+            console.log("query change qty & change booked sent");
+            if (err) {
+              res.status(500).send({ errMessage: "Internal server error" });
+            }
+
+            if (updateBooked) {
+              console.log("booked & qty Edited!");
+
+              // MySQL query to change transaction status
+              let confirmQuery = `UPDATE transactions SET status = '${
+                req.body.newStatus
+              }' WHERE id_transaction = ${db.escape(
+                req.body.id_transaction
+              )} ;`;
+
+              //Send query to MySQL
+              db.query(confirmQuery, (err, results) => {
+                console.log(`query sent: ${confirmQuery}`);
+                if (err)
+                  res.status(500).send({ errMessage: "Internal server error" });
+
+                if (results) {
+                  //Status changed
+                  console.log("Status changed");
+                  res.status(200).send({ message: "Status changed" });
+                }
+              });
+            }
+          });
+        }
       } else {
         console.log("Not an admin!");
         res.status(200).send({ message: "Not an admin!" });
@@ -180,7 +304,7 @@ module.exports = {
           db_parshare.transactions.transaction_date,
           '%Y-%m-%d'
         );`;
-        
+
       db.query(scriptQuery, (err, results) => {
         if (err) {
           res.status(500).send({
@@ -188,29 +312,43 @@ module.exports = {
             data: error,
           });
         } else {
-          const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+          const month = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sept",
+            "Oct",
+            "Nov",
+            "Dec",
+          ];
           const d = new Date();
-          let data = []
-          d.setMonth(d.getMonth()+1);
-          for(let i = 0; i < 30; i++){
-            const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
-            const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
-            
-            for(let j = 0; j < results.length; j++){
-              if(results[j].date === dateFormat){
+          let data = [];
+          d.setMonth(d.getMonth() + 1);
+          for (let i = 0; i < 30; i++) {
+            const dateFormat =
+              d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+            const dateFinal = d.getDate() + " " + month[d.getMonth()];
+
+            for (let j = 0; j < results.length; j++) {
+              if (results[j].date === dateFormat) {
                 data.push({
                   ...results[j],
-                  date: dateFinal
-                })
-              }else{
-                let search = results.find(res => res.date === dateFormat);
-                if(!search){
+                  date: dateFinal,
+                });
+              } else {
+                let search = results.find((res) => res.date === dateFormat);
+                if (!search) {
                   data.push({
                     date: dateFinal,
                     income: 0,
-                    totalPrice: 0
-                  })
-                  break
+                    totalPrice: 0,
+                  });
+                  break;
                 }
               }
             }
