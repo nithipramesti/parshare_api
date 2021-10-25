@@ -205,9 +205,7 @@ module.exports = {
               });
             }
           });
-        } else {
-          ////if REJECTED
-
+        } else if (req.body.newStatus === "Rejected") {
           //Get all products from the parcels and count TOTAL quantity
           let productAr = [];
           req.body.parcels.forEach((parcel) => {
