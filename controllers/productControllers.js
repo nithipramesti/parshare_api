@@ -5,9 +5,9 @@ const fs = require("fs");
 module.exports = {
   listProduct: (req, res) => {
     let getQuery;
-    if(req.query.id && !isNaN(req.query.id)){
+    if (req.query.id && !isNaN(req.query.id)) {
       getQuery = `SELECT id_product as id, id_product, product_name, db_parshare.products.description, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category WHERE db_parshare.categories.id_category = ${req.query.id}`;
-    }else if(!req.query.id || (req.query.id && isNaN(req.query.id))){
+    } else if (!req.query.id || (req.query.id && isNaN(req.query.id))) {
       getQuery = `SELECT id_product as id, id_product, product_name, db_parshare.products.description, product_price, image_product, db_parshare.products.id_category, db_parshare.categories.category, product_quantity, db_parshare.products.active FROM products INNER JOIN db_parshare.categories ON db_parshare.products.id_category = db_parshare.categories.id_category`;
     }
     db.query(getQuery, (err, result) => {
@@ -51,7 +51,7 @@ module.exports = {
         let getProductsQuery = `SELECT p.id_product, p.product_name, p.image_product, p.product_quantity, p.description, c.category FROM products p
         JOIN categories c ON p.id_category = c.id_category WHERE (${id_categoriesQuery.join(
           " OR "
-        )}) AND p.active = 'true';`;
+        )}) AND p.active = 'true' AND p.product_quantity > 0;`;
 
         db.query(getProductsQuery, (err, products) => {
           if (err) {
@@ -104,15 +104,15 @@ module.exports = {
     });
   },
   addProduct: (req, res) => {
-    if(req.user.role === 'admin'){
+    if (req.user.role === "admin") {
       try {
-        let path = '/images'
-        const upload = uploader(path, 'IMG').fields([{ name: 'file' }])
-        
+        let path = "/images";
+        const upload = uploader(path, "IMG").fields([{ name: "file" }]);
+
         upload(req, res, (error) => {
           if (error) {
-            console.log(error)
-            res.status(500).send(error)
+            console.log(error);
+            res.status(500).send(error);
           }
           
           const { file } = req.files
@@ -147,20 +147,20 @@ module.exports = {
                   }
                 });
               }
-            })
-          }else{
+            });
+          } else {
             res.status(500).send({
               success: false,
-              data: "Missing query!"
-            })
+              data: "Missing query!",
+            });
           }
-        })
+        });
       } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(500).send({
           success: false,
-          data: error
-        })
+          data: error,
+        });
       }
     } else {
       return res.status(500).send({
@@ -170,26 +170,48 @@ module.exports = {
     }
   },
   editProduct: (req, res) => {
-    if(req.user.role === "admin"){
-      if(!req.body.id) {
+    if (req.user.role === "admin") {
+      if (!req.body.id) {
         try {
-          let path = '/images'
-          const upload = uploader(path, 'IMG').fields([{ name: 'file' }])
-          
+          let path = "/images";
+          const upload = uploader(path, "IMG").fields([{ name: "file" }]);
+
           upload(req, res, (error) => {
             if (error) {
-              console.log(error)
-              res.status(500).send(error)
+              console.log(error);
+              res.status(500).send(error);
             }
-            
-            const { file } = req.files
-            const filepath = file ? path + '/' + file[0].filename : null
-            let data = JSON.parse(req.body.data)
-            data.image = filepath
-            let { id, name, price, description, category, quantity, image } = JSON.parse(req.body.data);
-            if(req.files && id && name && category && quantity && image && price && description){
-              fs.unlinkSync('./public' + image);
-              let updateQuery = `update products set product_name = ${db.escape(name)}, product_price = ${db.escape(price)}, image_product = ${db.escape(filepath)}, id_category = ${db.escape(category)}, product_quantity = ${db.escape(quantity)}, description = ${db.escape(description)} where id_product = ${db.escape(id)}`
+
+            const { file } = req.files;
+            const filepath = file ? path + "/" + file[0].filename : null;
+            let data = JSON.parse(req.body.data);
+            data.image = filepath;
+            let { id, name, price, description, category, quantity, image } =
+              JSON.parse(req.body.data);
+            if (
+              req.files &&
+              id &&
+              name &&
+              category &&
+              quantity &&
+              image &&
+              price &&
+              description
+            ) {
+              fs.unlinkSync("./public" + image);
+              let updateQuery = `update products set product_name = ${db.escape(
+                name
+              )}, product_price = ${db.escape(
+                price
+              )}, image_product = ${db.escape(
+                filepath
+              )}, id_category = ${db.escape(
+                category
+              )}, product_quantity = ${db.escape(
+                quantity
+              )}, description = ${db.escape(
+                description
+              )} where id_product = ${db.escape(id)}`;
               db.query(updateQuery, (err2, result2) => {
                 if (err2) {
                   fs.unlinkSync("./public" + filepath);
@@ -202,49 +224,59 @@ module.exports = {
                     status: true,
                   });
                 }
-              })
-            }else{
+              });
+            } else {
               return res.status(500).send({
                 success: false,
                 data: "Missing query!",
               });
             }
-          })
+          });
         } catch (error) {
-          console.log(error)
+          console.log(error);
           res.status(500).send({
             success: false,
-            data: error
-          })
+            data: error,
+          });
         }
-      }else if(req.body.id){
+      } else if (req.body.id) {
         let { id, name, price, description, category, quantity } = req.body;
-        if(id && name && category && quantity && description && price){
-          let updateQuery = `update products set product_name = ${db.escape(name)}, product_price = ${db.escape(price)}, id_category = ${db.escape(category)}, product_quantity = ${db.escape(quantity)}, description = ${db.escape(description)} where id_product = ${db.escape(id)}`
+        if (id && name && category && quantity && description && price) {
+          let updateQuery = `update products set product_name = ${db.escape(
+            name
+          )}, product_price = ${db.escape(price)}, id_category = ${db.escape(
+            category
+          )}, product_quantity = ${db.escape(
+            quantity
+          )}, description = ${db.escape(
+            description
+          )} where id_product = ${db.escape(id)}`;
           db.query(updateQuery, (err, result) => {
-            if(err){
+            if (err) {
               return res.status(500).send({
                 success: false,
-                data: err
-              })
-            }else{
-              let getQuery = `select * from products where id_product = ${db.escape(id)}`
+                data: err,
+              });
+            } else {
+              let getQuery = `select * from products where id_product = ${db.escape(
+                id
+              )}`;
               db.query(getQuery, (err2, result2) => {
-                if(err2){
+                if (err2) {
                   return res.status(500).send({
                     success: false,
-                    data: err2
-                  })
-                }else{
+                    data: err2,
+                  });
+                } else {
                   return res.status(200).send({
                     success: true,
-                    data: result2[0]
-                  })
+                    data: result2[0],
+                  });
                 }
-              })
+              });
             }
           });
-        }else{
+        } else {
           return res.status(500).send({
             success: false,
             data: "Missing query!",
