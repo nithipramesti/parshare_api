@@ -365,12 +365,10 @@ module.exports = {
               }
               d.setDate(d.getDate()-1)
             }
-            if(data.length === 30){
-              return res.status(200).send({
-                success: true,
-                data,
-              });
-            }
+            return res.status(200).send({
+              success: true,
+              data,
+            });
           }
         });
       } else {
