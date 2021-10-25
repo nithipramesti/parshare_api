@@ -292,6 +292,10 @@ module.exports = {
   revenueParcel: (req, res) => {
     if (req.user.role === "admin") {
       if(!isNaN(req.query.id)){
+        let period = 30
+        if(!isNaN(req.query.period)){
+          period = req.query.period
+        }
         let scriptQuery = `SELECT date, count(id_parcel) as total, parcel_price*count(id_parcel) as totalPrice, margin*count(id_parcel) as totalMargin FROM (SELECT
           DISTINCT db_parshare.transactions.id_transaction as id_transaction,
           date_format(
@@ -307,7 +311,7 @@ module.exports = {
           JOIN db_parshare.transaction_parcel ON db_parshare.transaction_parcel.id_transaction = db_parshare.transactions.id_transaction
           JOIN db_parshare.parcels ON db_parshare.parcels.id_parcel = db_parshare.transaction_parcel.id_parcel
         WHERE
-          db_parshare.transactions.transaction_date BETWEEN CURDATE() - INTERVAL 30 DAY
+          db_parshare.transactions.transaction_date BETWEEN CURDATE() - INTERVAL ${period} DAY
           AND db_parshare.transactions.status = "confirmed"
           AND db_parshare.transaction_parcel.id_parcel = ${req.query.id}
         GROUP BY
@@ -330,7 +334,7 @@ module.exports = {
             const d = new Date();
             let data = []
             d.setMonth(d.getMonth()+1)
-            for(let i = 0; i < 30; i++){
+            for(let i = 0; i < period; i++){
               const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
               const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
 
