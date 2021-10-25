@@ -291,4 +291,34 @@ module.exports = {
       );
     });
   },
+
+  delete: (req, res) => {
+    console.log(req.body);
+
+    let deleteCartQuery = `DELETE FROM cart where id_cart = ${req.body.id_cart};`;
+
+    db.query(deleteCartQuery, (err, deleteCart) => {
+      if (err) {
+        res.status(500).send({ errMessage: "Internal server error" });
+      }
+
+      if (deleteCart) {
+        console.log("Delete from cart succeed");
+        let deleteCartProductsQuery = `DELETE FROM cart_products where id_cart = ${req.body.id_cart};`;
+
+        db.query(deleteCartProductsQuery, (err, deleteCartProducts) => {
+          if (err) {
+            res.status(500).send({ errMessage: "Internal server error" });
+          }
+
+          if (deleteCartProducts) {
+            console.log("delete card products succeed");
+            res.status(200).send({
+              message: "Delete cart item succeed!",
+            });
+          }
+        });
+      }
+    });
+  },
 };
