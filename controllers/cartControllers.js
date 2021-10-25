@@ -33,27 +33,31 @@ module.exports = {
             res.status(500).send({ errMessage: "Internal server error" });
           }
 
-          let getCartQuery = `SELECT c.id_cart, c.id_user, par.id_parcel, par.parcel_name, par.parcel_price, par.image_parcel, pro.id_product,  pro.product_name, pro.product_price, cp.product_quantity FROM cart c
+          if (resultsCartProducts) {
+            console.log("SUCCESS ADD");
+
+            let getCartQuery = `SELECT c.id_cart, c.id_user, par.id_parcel, par.parcel_name, par.parcel_price, par.image_parcel, pro.id_product,  pro.product_name, pro.product_price, cp.product_quantity FROM cart c
       JOIN cart_products cp ON c.id_cart = cp.id_cart
       JOIN parcels par ON c.id_parcel = par.id_parcel
       JOIN products pro ON cp.id_product = pro.id_product
       WHERE c.id_user = ${id_user};`;
 
-          db.query(getCartQuery, (err, result)=>{
-            if (err) {
-              res.status(500).send({ errMessage: "Internal server error" });
-            }
+            db.query(getCartQuery, (err, result) => {
+              if (err) {
+                res.status(500).send({ errMessage: "Internal server error" });
+              }
 
-            if (result) {
-              console.log("SUCCESS");
-              res.status(200).send({
-                message: "Parcel added to cart",
-                data : result
-              });
-            } else {
-              console.log("NOT SUCCESS");
-            }
-          })
+              if (result) {
+                console.log("SUCCESS GET");
+                res.status(200).send({
+                  message: "Parcel added to cart",
+                  data: result,
+                });
+              } else {
+                console.log("NOT SUCCESS");
+              }
+            });
+          }
         });
       }
     });
@@ -135,6 +139,8 @@ module.exports = {
             console.log("add to transaction_parcel succeed");
 
             let productBooked = {};
+
+            //Count TOTAL product quantity
             cartRaw.forEach((val) => {
               if (
                 Object.keys(productBooked).findIndex(
@@ -240,16 +246,18 @@ module.exports = {
 
   edit: (req, res) => {
     const { id_user, id_cart, id_parcel, products } = req.body;
-    
-    let deleteQuery = `DELETE FROM cart_products WHERE id_cart = ${id_cart}`;
 
-    console.log(`deleteQuery: `,deleteQuery)
+    let deleteQuery = `DELETE FROM cart_products WHERE id_cart = ${db.escape(
+      id_cart
+    )}`;
+
+    console.log(`deleteQuery: `, deleteQuery);
 
     db.query(deleteQuery, (errDeleteQuery, resultDeleteQuery) => {
       if (errDeleteQuery) {
         res.status(500).send({ errMessage: "Internal server error" });
       }
-      
+
       let productsInsertQuery = [];
       products.forEach((val) => {
         productsInsertQuery.push(
@@ -260,24 +268,27 @@ module.exports = {
       let editCartProductsQuery = `INSERT INTO cart_products VALUES
       ${productsInsertQuery.join(", ")}`;
 
-      console.log(`editCartProductsQuery: `,editCartProductsQuery)
+      console.log(`editCartProductsQuery: `, editCartProductsQuery);
 
-      db.query(editCartProductsQuery, (errEditCartProductsQuery, resultsEditCartProductsQuery) => {
-        if (errEditCartProductsQuery) {
-          res.status(500).send({ errMessage: "Internal server error" });
+      db.query(
+        editCartProductsQuery,
+        (errEditCartProductsQuery, resultsEditCartProductsQuery) => {
+          if (errEditCartProductsQuery) {
+            res.status(500).send({ errMessage: "Internal server error" });
+          }
+
+          if (resultsEditCartProductsQuery) {
+            console.log("SUCCESS");
+
+            res.status(200).send({
+              message: "Edit Cart Success",
+              data: products,
+            });
+          } else {
+            console.log("NOT SUCCESS");
+          }
         }
-
-        if (resultsEditCartProductsQuery) {
-          console.log("SUCCESS");
-
-          res.status(200).send({
-            message: "Edit Cart Success",
-            data : products
-          });
-        } else {
-          console.log("NOT SUCCESS");
-        }
-      });
+      );
     });
   },
 };
