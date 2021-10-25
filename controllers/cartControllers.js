@@ -34,14 +34,29 @@ module.exports = {
           }
 
           if (resultsCartProducts) {
-            console.log("SUCCESS");
+            console.log("SUCCESS ADD");
 
-            res.status(200).send({
-              message: "Parcel added to cart",
-              data: id_cart,
+            let getCartQuery = `SELECT c.id_cart, c.id_user, par.id_parcel, par.parcel_name, par.parcel_price, par.image_parcel, pro.id_product,  pro.product_name, pro.product_price, cp.product_quantity FROM cart c
+      JOIN cart_products cp ON c.id_cart = cp.id_cart
+      JOIN parcels par ON c.id_parcel = par.id_parcel
+      JOIN products pro ON cp.id_product = pro.id_product
+      WHERE c.id_user = ${id_user};`;
+
+            db.query(getCartQuery, (err, result) => {
+              if (err) {
+                res.status(500).send({ errMessage: "Internal server error" });
+              }
+
+              if (result) {
+                console.log("SUCCESS GET");
+                res.status(200).send({
+                  message: "Parcel added to cart",
+                  data: result,
+                });
+              } else {
+                console.log("NOT SUCCESS");
+              }
             });
-          } else {
-            console.log("NOT SUCCESS");
           }
         });
       }
@@ -230,8 +245,6 @@ module.exports = {
   },
 
   edit: (req, res) => {
-    console.log(req.body);
-
     const { id_user, id_cart, id_parcel, products } = req.body;
 
     let deleteQuery = `DELETE FROM cart_products WHERE id_cart = ${db.escape(
