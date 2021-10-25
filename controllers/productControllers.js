@@ -322,4 +322,93 @@ module.exports = {
       });
     }
   },
+  soldProduct : (req, res) => {
+    if (req.user.role === "admin") {
+      if(!isNaN(req.query.id)){
+        let period = 30
+        if(!isNaN(req.query.period)){
+          period = req.query.period
+        }
+        let scriptQuery = `SELECT date, count*sum as total FROM (SELECT
+          date_format(
+            db_parshare.transactions.transaction_date,
+            '%Y-%m-%d'
+          ) as date,
+          COUNT(db_parshare.transaction_parcel.id_product) as count,
+          SUM(db_parshare.transaction_parcel.product_quantity) as sum
+        FROM
+          db_parshare.transactions
+          JOIN db_parshare.transaction_parcel ON db_parshare.transactions.id_transaction = db_parshare.transaction_parcel.id_transaction
+        WHERE
+          db_parshare.transactions.transaction_date BETWEEN CURDATE() - INTERVAL ${period} DAY
+          AND db_parshare.transactions.status = "confirmed"
+          AND db_parshare.transaction_parcel.id_product = ${req.query.id}
+        GROUP BY
+          date_format(
+            db_parshare.transactions.transaction_date,
+            '%Y-%m-%d'
+          )) as product;`;
+
+        db.query(scriptQuery, (err, results) => {
+          if (err){ 
+            res.status(500).send({
+              success: false,
+              data: error,
+            });
+          } else {
+            const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+            const d = new Date();
+            let data = []
+            d.setMonth(d.getMonth()+1)
+            for(let i = 0; i < period; i++){
+              const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+              const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
+
+              if(results.length > 0){
+                for(let j = 0; j < results.length; j++){
+                  if(results[j].date === dateFormat){
+                    data.push({
+                      ...results[j],
+                      date: dateFinal
+                    })
+                  }else{
+                    let search = results.find(res => res.date === dateFormat);
+                    if(!search){
+                      data.push({
+                        date: dateFinal,
+                        total: 0
+                      })
+                      break
+                    }
+                  }
+                }
+              }else{
+                data.push({
+                  date: dateFinal,
+                  total: 0,
+                  totalPrice: 0,
+                  totalMargin: 0
+                })
+              }
+              d.setDate(d.getDate()-1)
+            }
+            return res.status(200).send({
+              success: true,
+              data,
+            });
+          }
+        });
+      } else {
+        res.status(500).send({
+          success: false,
+          data: "Missing query!",
+        });
+      }
+    }else{
+      return res.status(500).send({
+        success: false,
+        data: "User not allowed!",
+      });
+    }
+  }
 };

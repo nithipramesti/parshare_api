@@ -8,5 +8,6 @@ routers.delete("/delete", auth, productControllers.deleteProduct);
 routers.patch("/edit", auth, productControllers.editProduct);
 routers.get("/get/:id_parcel", productControllers.getProduct);
 routers.get("/list", productControllers.listProduct);
+routers.get("/sold", auth, productControllers.soldProduct);
 
 module.exports = routers;
