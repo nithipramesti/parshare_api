@@ -357,7 +357,7 @@ module.exports = {
                 }
               }else{
                 data.push({
-                  date: dateFormat,
+                  date: dateFinal,
                   total: 0,
                   totalPrice: 0,
                   totalMargin: 0
