@@ -179,10 +179,8 @@ module.exports = {
         date_format(
           db_parshare.transactions.transaction_date,
           '%Y-%m-%d'
-        ),
-        income,
-        db_parshare.transactions.transaction_totalprice;`;
-
+        );`;
+        
       db.query(scriptQuery, (err, results) => {
         if (err) {
           res.status(500).send({
@@ -190,26 +188,30 @@ module.exports = {
             data: error,
           });
         } else {
+          const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
           const d = new Date();
-          let data = [];
-          d.setMonth(d.getMonth() + 1);
-          for (let i = 0; i < 30; i++) {
-            const dateFormat =
-              d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
-
-            for (let j = 0; j < results.length; j++) {
-              if (results[j].date === dateFormat) {
+          let data = []
+          d.setMonth(d.getMonth()+1);
+          for(let i = 0; i < 30; i++){
+            const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+            const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
+            
+            for(let j = 0; j < results.length; j++){
+              if(results[j].date === dateFormat){
                 data.push({
                   ...results[j],
-                });
-                break;
-              } else {
-                data.push({
-                  date: dateFormat,
-                  income: 0,
-                  totalPrice: 0,
-                });
-                break;
+                  date: dateFinal
+                })
+              }else{
+                let search = results.find(res => res.date === dateFormat);
+                if(!search){
+                  data.push({
+                    date: dateFinal,
+                    income: 0,
+                    totalPrice: 0
+                  })
+                  break
+                }
               }
             }
             d.setDate(d.getDate() - 1);

@@ -327,32 +327,37 @@ module.exports = {
               data: error,
             });
           } else {
+            const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
             const d = new Date();
             let data = []
             d.setMonth(d.getMonth()+1)
             for(let i = 0; i < 30; i++){
               const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+              const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
 
               if(results.length > 0){
                 for(let j = 0; j < results.length; j++){
                   if(results[j].date === dateFormat){
                     data.push({
-                      ...results[j]
+                      ...results[j],
+                      date: dateFinal
                     })
-                    break
                   }else{
-                    data.push({
-                      date: dateFormat,
-                      total: 0,
-                      totalPrice: 0,
-                      totalMargin: 0
-                    })
-                    break
+                    let search = results.find(res => res.date === dateFormat);
+                    if(!search){
+                      data.push({
+                        date: dateFinal,
+                        total: 0,
+                        totalPrice: 0,
+                        totalMargin: 0
+                      })
+                      break
+                    }
                   }
                 }
               }else{
                 data.push({
-                  date: dateFormat,
+                  date: dateFinal,
                   total: 0,
                   totalPrice: 0,
                   totalMargin: 0
@@ -360,12 +365,10 @@ module.exports = {
               }
               d.setDate(d.getDate()-1)
             }
-            if(data.length === 30){
-              return res.status(200).send({
-                success: true,
-                data,
-              });
-            }
+            return res.status(200).send({
+              success: true,
+              data,
+            });
           }
         });
       } else {
