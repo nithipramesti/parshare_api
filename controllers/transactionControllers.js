@@ -202,14 +202,16 @@ module.exports = {
                 data.push({
                   ...results[j],
                 });
-                break;
               } else {
-                data.push({
-                  date: dateFormat,
-                  income: 0,
-                  totalPrice: 0,
-                });
-                break;
+                let search = results.find((res) => res.date === dateFormat);
+                if (!search) {
+                  data.push({
+                    date: dateFormat,
+                    income: 0,
+                    totalPrice: 0,
+                  });
+                  break;
+                }
               }
             }
             d.setDate(d.getDate() - 1);
