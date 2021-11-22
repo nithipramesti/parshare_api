@@ -51,7 +51,9 @@ module.exports = {
         let getProductsQuery = `SELECT p.id_product, p.product_name, p.image_product, p.product_quantity, p.description, c.category FROM products p
         JOIN categories c ON p.id_category = c.id_category WHERE (${id_categoriesQuery.join(
           " OR "
-        )}) AND p.active = 'true' AND p.product_quantity > 0;`;
+        )}) AND p.active = 'true' AND p.product_quantity > 0
+        ORDER BY ${req.body.sortBy}
+        LIMIT ${req.body.startIndex - 1}, ${req.body.itemPerPage};`;
 
         db.query(getProductsQuery, (err, products) => {
           if (err) {
@@ -84,11 +86,33 @@ module.exports = {
             parcelData = obj;
             console.log(parcelData);
 
-            //Send products data to front end
-            res.status(200).send({
-              parcelData,
-              selectedCategories,
-              products,
+            //Get products total number
+            let getTotalProductsQuery = `SELECT COUNT(p.id_product) AS totalProducts FROM products p
+            JOIN categories c ON p.id_category = c.id_category WHERE (${id_categoriesQuery.join(
+              " OR "
+            )}) AND p.active = 'true' AND p.product_quantity > 0;`;
+
+            db.query(getTotalProductsQuery, (err, totalProductsObj) => {
+              if (err) {
+                res.status(500).send({ errMessage: "Internal server error" });
+              }
+
+              if (totalProductsObj[0]) {
+                totalProducts = totalProductsObj[0].totalProducts;
+              } else {
+                res.status(200).send({
+                  errMessage: "Incorrect parcel data",
+                });
+              }
+
+              //Send products data to front end
+              res.status(200).send({
+                parcelData,
+                selectedCategories,
+                id_categoriesQuery,
+                products,
+                totalProducts,
+              });
             });
           } else {
             res.status(200).send({
@@ -103,6 +127,90 @@ module.exports = {
       }
     });
   },
+  getPerPage: (req, res) => {
+    console.log(req.body);
+
+    //Get products with parcel's categories
+    let getProductsQuery = `SELECT p.id_product, p.product_name, p.image_product, p.product_quantity, p.description, c.category FROM products p
+    JOIN categories c ON p.id_category = c.id_category WHERE (${req.body.id_categoriesQuery.join(
+      " OR "
+    )}) AND p.active = 'true' AND p.product_quantity > 0
+    AND p.product_name LIKE '%${req.body.searchValue}%'
+    ORDER BY ${req.body.sortBy}
+    LIMIT ${req.body.startIndex - 1}, ${req.body.itemPerPage};`;
+
+    db.query(getProductsQuery, (err, products) => {
+      if (err) {
+        res.status(500).send({ errMessage: "Internal server error" });
+      }
+
+      if (products) {
+        console.log("MI", products);
+        //Send products data to front end
+        res.status(200).send({
+          products,
+        });
+      } else {
+        res.status(200).send({
+          errMessage: "Incorrect parcel data",
+        });
+      }
+    });
+  },
+  getFilter: (req, res) => {
+    console.log(req.body);
+
+    //Get products with parcel's categories
+    let getProductsQuery = `SELECT p.id_product, p.product_name, p.image_product, p.product_quantity, p.description, c.category FROM products p
+    JOIN categories c ON p.id_category = c.id_category WHERE (${req.body.id_categoriesQuery.join(
+      " OR "
+    )}) AND p.active = 'true' AND p.product_quantity > 0
+    AND p.product_name LIKE '%${req.body.searchValue}%'
+    ORDER BY ${req.body.sortBy}
+    LIMIT ${req.body.startIndex - 1}, ${req.body.itemPerPage};`;
+
+    db.query(getProductsQuery, (err, products) => {
+      if (err) {
+        res.status(500).send({ errMessage: "Internal server error" });
+      }
+
+      if (products) {
+        console.log("getFilter", products);
+
+        //Get products total number
+        let getTotalProductsQuery = `SELECT COUNT(p.id_product) AS totalProducts FROM products p
+        JOIN categories c ON p.id_category = c.id_category WHERE (${req.body.id_categoriesQuery.join(
+          " OR "
+        )}) AND p.active = 'true' AND p.product_quantity > 0
+        AND p.product_name LIKE '%${req.body.searchValue}%';`;
+
+        db.query(getTotalProductsQuery, (err, totalProductsObj) => {
+          if (err) {
+            res.status(500).send({ errMessage: "Internal server error" });
+          }
+
+          if (totalProductsObj[0]) {
+            totalProducts = totalProductsObj[0].totalProducts;
+          } else {
+            res.status(200).send({
+              errMessage: "Incorrect parcel data",
+            });
+          }
+
+          //Send products data to front end
+          res.status(200).send({
+            products,
+            totalProducts,
+          });
+        });
+      } else {
+        res.status(200).send({
+          errMessage: "Incorrect parcel data",
+        });
+      }
+    });
+  },
+
   addProduct: (req, res) => {
     if (req.user.role === "admin") {
       try {
@@ -114,15 +222,27 @@ module.exports = {
             console.log(error);
             res.status(500).send(error);
           }
-          
-          const { file } = req.files
-          const filepath = file ? path + '/' + file[0].filename : null
-          let data = JSON.parse(req.body.data)
-          data.image = filepath
-          let { name, price, category, quantity, description } = JSON.parse(req.body.data);
-          if(name && price && category && quantity && description && req.files) {
-          
-            let addQuery = `insert into products values (null, ${db.escape(name)}, ${db.escape(filepath)}, ${db.escape(price)}, ${db.escape(category)}, ${db.escape(quantity)}, 0, 'true', ${db.escape(description)})`
+
+          const { file } = req.files;
+          const filepath = file ? path + "/" + file[0].filename : null;
+          let data = JSON.parse(req.body.data);
+          data.image = filepath;
+          let { name, price, category, quantity, description } = JSON.parse(
+            req.body.data
+          );
+          if (
+            name &&
+            price &&
+            category &&
+            quantity &&
+            description &&
+            req.files
+          ) {
+            let addQuery = `insert into products values (null, ${db.escape(
+              name
+            )}, ${db.escape(filepath)}, ${db.escape(price)}, ${db.escape(
+              category
+            )}, ${db.escape(quantity)}, 0, 'true', ${db.escape(description)})`;
             db.query(addQuery, (err, result) => {
               if (err) {
                 fs.unlinkSync("./public" + filepath);
@@ -322,12 +442,12 @@ module.exports = {
       });
     }
   },
-  soldProduct : (req, res) => {
+  soldProduct: (req, res) => {
     if (req.user.role === "admin") {
-      if(!isNaN(req.query.id)){
-        let period = 30
-        if(!isNaN(req.query.period)){
-          period = req.query.period
+      if (!isNaN(req.query.id)) {
+        let period = 30;
+        if (!isNaN(req.query.period)) {
+          period = req.query.period;
         }
         let scriptQuery = `SELECT date, count*sum as total FROM (SELECT
           date_format(
@@ -350,47 +470,61 @@ module.exports = {
           )) as product;`;
 
         db.query(scriptQuery, (err, results) => {
-          if (err){ 
+          if (err) {
             res.status(500).send({
               success: false,
               data: error,
             });
           } else {
-            const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+            const month = [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sept",
+              "Oct",
+              "Nov",
+              "Dec",
+            ];
             const d = new Date();
-            let data = []
-            d.setMonth(d.getMonth()+1)
-            for(let i = 0; i < period; i++){
-              const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
-              const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
+            let data = [];
+            d.setMonth(d.getMonth() + 1);
+            for (let i = 0; i < period; i++) {
+              const dateFormat =
+                d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+              const dateFinal = d.getDate() + " " + month[d.getMonth()];
 
-              if(results.length > 0){
-                for(let j = 0; j < results.length; j++){
-                  if(results[j].date === dateFormat){
+              if (results.length > 0) {
+                for (let j = 0; j < results.length; j++) {
+                  if (results[j].date === dateFormat) {
                     data.push({
                       ...results[j],
-                      date: dateFinal
-                    })
-                  }else{
-                    let search = results.find(res => res.date === dateFormat);
-                    if(!search){
+                      date: dateFinal,
+                    });
+                  } else {
+                    let search = results.find((res) => res.date === dateFormat);
+                    if (!search) {
                       data.push({
                         date: dateFinal,
-                        total: 0
-                      })
-                      break
+                        total: 0,
+                      });
+                      break;
                     }
                   }
                 }
-              }else{
+              } else {
                 data.push({
                   date: dateFinal,
                   total: 0,
                   totalPrice: 0,
-                  totalMargin: 0
-                })
+                  totalMargin: 0,
+                });
               }
-              d.setDate(d.getDate()-1)
+              d.setDate(d.getDate() - 1);
             }
             return res.status(200).send({
               success: true,
@@ -404,11 +538,11 @@ module.exports = {
           data: "Missing query!",
         });
       }
-    }else{
+    } else {
       return res.status(500).send({
         success: false,
         data: "User not allowed!",
       });
     }
-  }
+  },
 };

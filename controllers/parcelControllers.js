@@ -23,7 +23,7 @@ module.exports = {
     });
   },
   listParcel: (req, res) => {
-    let getQuery = `SELECT parcels.id_parcel as id,parcels.id_parcel, parcels.parcel_name, parcels.parcel_price, parcels.margin, parcels.image_parcel, parcels.description, parcels.active, GROUP_CONCAT(categories.category SEPARATOR',') as categories, GROUP_CONCAT(parcel_categories.parcelcategory_quantity SEPARATOR',') as quantities FROM parcels JOIN parcel_categories ON parcel_categories.id_parcel = parcels.id_parcel JOIN categories ON parcel_categories.id_category = categories.id_category GROUP BY parcels.id_parcel, parcels.parcel_name, parcels.image_parcel`
+    let getQuery = `SELECT parcels.id_parcel as id,parcels.id_parcel, parcels.parcel_name, parcels.parcel_price, parcels.margin, parcels.image_parcel, parcels.description, parcels.active, GROUP_CONCAT(categories.category SEPARATOR',') as categories, GROUP_CONCAT(parcel_categories.parcelcategory_quantity SEPARATOR',') as quantities FROM parcels JOIN parcel_categories ON parcel_categories.id_parcel = parcels.id_parcel JOIN categories ON parcel_categories.id_category = categories.id_category GROUP BY parcels.id_parcel, parcels.parcel_name, parcels.image_parcel`;
     db.query(getQuery, (err, result) => {
       if (err) {
         return res.status(500).send({
@@ -83,16 +83,18 @@ module.exports = {
           const { file } = req.files;
           const filepath = file ? path + "/" + file[0].filename : null;
           let data = JSON.parse(req.body.data);
-          console.log(`data:`,data)
-          let {category, name, description, margin, price, image} = data
+          console.log(`data:`, data);
+          let { category, name, description, margin, price, image } = data;
           image = filepath;
-          
-          if(category && name && description && margin && price && image){
+
+          if (category && name && description && margin && price && image) {
             let addParcelQuery = `insert into parcels values (null, ${db.escape(
               data.name
-            )}, ${db.escape(data.price)}, ${db.escape(data.margin)}, ${db.escape(
-              filepath
-            )}, ${db.escape(data.description)}, 'true')`;
+            )}, ${db.escape(data.price)}, ${db.escape(
+              data.margin
+            )}, ${db.escape(filepath)}, ${db.escape(
+              data.description
+            )}, 'true')`;
             db.query(addParcelQuery, (errParcelQuery, resultParcelQuery) => {
               if (errParcelQuery) {
                 fs.unlinkSync("./public" + filepath);
@@ -101,27 +103,32 @@ module.exports = {
                   data: errParcelQuery,
                 });
               } else if (resultParcelQuery.insertId) {
-                for(let i = 0;i<data.category.length;i++){
-                  if(data.category[i].category === ""){
-                    id_category = 1
-                  }else{
-                    id_category = parseInt(data.category[i].category)
+                for (let i = 0; i < data.category.length; i++) {
+                  if (data.category[i].category === "") {
+                    id_category = 1;
+                  } else {
+                    id_category = parseInt(data.category[i].category);
                   }
 
-                  let quantity = parseInt(data.category[i].quantity)
-                  let addCategoryQuery = `insert into parcel_categories values (null, ${db.escape(resultParcelQuery.insertId)}, ${db.escape(id_category)}, ${db.escape(quantity)})`
-                  console.log(`addCategoryQuery ke-${i} : ${addCategoryQuery}`)
-                  db.query(addCategoryQuery, (errCategoryQuery, resultCategoryQuery) => {
-                    if (errCategoryQuery) {
-                      fs.unlinkSync("./public" + filepath);
-                      return res.status(500).send({
-                        success: false,
-                        data: errCategoryQuery,
-                      });
+                  let quantity = parseInt(data.category[i].quantity);
+                  let addCategoryQuery = `insert into parcel_categories values (null, ${db.escape(
+                    resultParcelQuery.insertId
+                  )}, ${db.escape(id_category)}, ${db.escape(quantity)})`;
+                  console.log(`addCategoryQuery ke-${i} : ${addCategoryQuery}`);
+                  db.query(
+                    addCategoryQuery,
+                    (errCategoryQuery, resultCategoryQuery) => {
+                      if (errCategoryQuery) {
+                        fs.unlinkSync("./public" + filepath);
+                        return res.status(500).send({
+                          success: false,
+                          data: errCategoryQuery,
+                        });
+                      }
                     }
-                  });
+                  );
                 }
-                
+
                 let getQueryParcels = `select * from parcels where id_parcel='${resultParcelQuery.insertId}'`;
                 db.query(getQueryParcels, (errGetParcel, resultGetParcel) => {
                   if (errGetParcel) {
@@ -139,7 +146,7 @@ module.exports = {
                 });
               }
             });
-          }else{
+          } else {
             res.status(500).send({
               success: false,
               data: "Missing query!",
@@ -206,69 +213,96 @@ module.exports = {
           const { file } = req.files;
           const filepath = file ? path + "/" + file[0].filename : null;
           let data = JSON.parse(req.body.data);
-          console.log(`data:`,data)
-          let {id, category, name, description, margin, price, image} = data
+          console.log(`data:`, data);
+          let { id, category, name, description, margin, price, image } = data;
           image = filepath;
-          console.log(`image: `,image)
-          
-          if(id && category && name && description && margin && price && image){
-            let deleteCategoryQuery = `DELETE FROM parcel_categories WHERE id_parcel = ${id}`
-            db.query(deleteCategoryQuery,(err,result) => {
+          console.log(`image: `, image);
+
+          if (
+            id &&
+            category &&
+            name &&
+            description &&
+            margin &&
+            price &&
+            image
+          ) {
+            let deleteCategoryQuery = `DELETE FROM parcel_categories WHERE id_parcel = ${id}`;
+            db.query(deleteCategoryQuery, (err, result) => {
               if (err) {
                 return res.status(500).send({
                   success: false,
                   data: err,
                 });
-              } 
-              let editParcelQuery = `update parcels set parcel_name=${db.escape(name)}, parcel_price=${(db.escape(price))}, margin=${db.escape(margin)},image_parcel=${(db.escape(filepath))}, description=${db.escape(description)} where id_parcel=${(id)}`;
-              db.query(editParcelQuery, (errEditParcelQuery, resulteditParcelQuery) => {
-                if (errEditParcelQuery) {
-                  fs.unlinkSync("./public" + filepath);
-                  return res.status(500).send({
-                    success: false,
-                    data: errEditParcelQuery,
-                  });
-                } 
-                if (id) {
-                  for(let i = 0;i<data.category.length;i++){
-                    if(data.category[i].category === ""){
-                      id_category = 1
-                    }else{
-                      id_category = parseInt(data.category[i].category)
-                    }
-                    let quantity = parseInt(data.category[i].quantity)
-                    let addCategoryQuery = `insert into parcel_categories values (null, ${db.escape(id)}, ${db.escape(id_category)}, ${db.escape(quantity)})`
-                    console.log(`addCategoryQuery ke-${i} : ${addCategoryQuery}`)
-                    db.query(addCategoryQuery, (errCategoryQuery, resultCategoryQuery) => {
-                      if (errCategoryQuery) {
-                        fs.unlinkSync("./public" + filepath);
-                        return res.status(500).send({
-                          success: false,
-                          data: errCategoryQuery,
-                        });
-                      }
+              }
+              let editParcelQuery = `update parcels set parcel_name=${db.escape(
+                name
+              )}, parcel_price=${db.escape(price)}, margin=${db.escape(
+                margin
+              )},image_parcel=${db.escape(filepath)}, description=${db.escape(
+                description
+              )} where id_parcel=${id}`;
+              db.query(
+                editParcelQuery,
+                (errEditParcelQuery, resulteditParcelQuery) => {
+                  if (errEditParcelQuery) {
+                    fs.unlinkSync("./public" + filepath);
+                    return res.status(500).send({
+                      success: false,
+                      data: errEditParcelQuery,
                     });
                   }
-                  
-                  let getQueryParcels = `select * from parcels where id_parcel='${id}'`;
-                  db.query(getQueryParcels, (errGetParcel, resultGetParcel) => {
-                    if (errGetParcel) {
-                      fs.unlinkSync("./public" + filepath);
-                      return res.status(500).send({
-                        success: false,
-                        data: errGetParcel,
-                      });
-                    } else {
-                      return res.status(200).send({
-                        success: true,
-                        data: resultGetParcel[0],
-                      });
+                  if (id) {
+                    for (let i = 0; i < data.category.length; i++) {
+                      if (data.category[i].category === "") {
+                        id_category = 1;
+                      } else {
+                        id_category = parseInt(data.category[i].category);
+                      }
+                      let quantity = parseInt(data.category[i].quantity);
+                      let addCategoryQuery = `insert into parcel_categories values (null, ${db.escape(
+                        id
+                      )}, ${db.escape(id_category)}, ${db.escape(quantity)})`;
+                      console.log(
+                        `addCategoryQuery ke-${i} : ${addCategoryQuery}`
+                      );
+                      db.query(
+                        addCategoryQuery,
+                        (errCategoryQuery, resultCategoryQuery) => {
+                          if (errCategoryQuery) {
+                            fs.unlinkSync("./public" + filepath);
+                            return res.status(500).send({
+                              success: false,
+                              data: errCategoryQuery,
+                            });
+                          }
+                        }
+                      );
                     }
-                  });
+
+                    let getQueryParcels = `select * from parcels where id_parcel='${id}'`;
+                    db.query(
+                      getQueryParcels,
+                      (errGetParcel, resultGetParcel) => {
+                        if (errGetParcel) {
+                          fs.unlinkSync("./public" + filepath);
+                          return res.status(500).send({
+                            success: false,
+                            data: errGetParcel,
+                          });
+                        } else {
+                          return res.status(200).send({
+                            success: true,
+                            data: resultGetParcel[0],
+                          });
+                        }
+                      }
+                    );
+                  }
                 }
-              });
-            })
-          }else{
+              );
+            });
+          } else {
             res.status(500).send({
               success: false,
               data: "Missing query!",
@@ -291,10 +325,10 @@ module.exports = {
   },
   revenueParcel: (req, res) => {
     if (req.user.role === "admin") {
-      if(!isNaN(req.query.id)){
-        let period = 30
-        if(!isNaN(req.query.period)){
-          period = req.query.period
+      if (!isNaN(req.query.id)) {
+        let period = 30;
+        if (!isNaN(req.query.period)) {
+          period = req.query.period;
         }
         let scriptQuery = `SELECT date, count(id_parcel) as total, parcel_price*count(id_parcel) as totalPrice, margin*count(id_parcel) as totalMargin FROM (SELECT
           DISTINCT db_parshare.transactions.id_transaction as id_transaction,
@@ -324,49 +358,63 @@ module.exports = {
           db_parshare.transactions.id_transaction) as transaction GROUP BY date, id_parcel;`;
 
         db.query(scriptQuery, (err, results) => {
-          if (err){ 
+          if (err) {
             res.status(500).send({
               success: false,
               data: error,
             });
           } else {
-            const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+            const month = [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sept",
+              "Oct",
+              "Nov",
+              "Dec",
+            ];
             const d = new Date();
-            let data = []
-            d.setMonth(d.getMonth()+1)
-            for(let i = 0; i < period; i++){
-              const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
-              const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
+            let data = [];
+            d.setMonth(d.getMonth() + 1);
+            for (let i = 0; i < period; i++) {
+              const dateFormat =
+                d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+              const dateFinal = d.getDate() + " " + month[d.getMonth()];
 
-              if(results.length > 0){
-                for(let j = 0; j < results.length; j++){
-                  if(results[j].date === dateFormat){
+              if (results.length > 0) {
+                for (let j = 0; j < results.length; j++) {
+                  if (results[j].date === dateFormat) {
                     data.push({
                       ...results[j],
-                      date: dateFinal
-                    })
-                  }else{
-                    let search = results.find(res => res.date === dateFormat);
-                    if(!search){
+                      date: dateFinal,
+                    });
+                  } else {
+                    let search = results.find((res) => res.date === dateFormat);
+                    if (!search) {
                       data.push({
                         date: dateFinal,
                         total: 0,
                         totalPrice: 0,
-                        totalMargin: 0
-                      })
-                      break
+                        totalMargin: 0,
+                      });
+                      break;
                     }
                   }
                 }
-              }else{
+              } else {
                 data.push({
                   date: dateFinal,
                   total: 0,
                   totalPrice: 0,
-                  totalMargin: 0
-                })
+                  totalMargin: 0,
+                });
               }
-              d.setDate(d.getDate()-1)
+              d.setDate(d.getDate() - 1);
             }
             return res.status(200).send({
               success: true,
@@ -380,11 +428,11 @@ module.exports = {
           data: "Missing query!",
         });
       }
-    }else{
+    } else {
       return res.status(500).send({
         success: false,
         data: "User not allowed!",
       });
     }
-  }
-}
+  },
+};

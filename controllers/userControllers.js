@@ -186,7 +186,6 @@ module.exports = {
     });
   },
   keepLogin: (req, res) => {
-    //If token decoded failed / wrong token
     if (!req.dataDecode.email) {
       res.status(500).send({
         errMessage: "Session expired, please login again",
@@ -219,8 +218,9 @@ module.exports = {
         });
       } else {
         console.log("Data doesn't match the database");
-        res.status(200).send({
-          errMessage: "Data doesn't match the database",
+        res.status(500).send({
+          errMessage: "Session expired, please login again",
+          tokenNotDecoded: true,
         });
       }
     });

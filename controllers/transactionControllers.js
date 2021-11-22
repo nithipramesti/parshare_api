@@ -287,7 +287,7 @@ module.exports = {
   incomeTransaction: (req, res) => {
     if (req.user.role === "admin") {
       let period = 30;
-      if(!isNaN(req.query.period)){
+      if (!isNaN(req.query.period)) {
         period = req.query.period;
       }
       let scriptQuery = `SELECT
@@ -330,14 +330,15 @@ module.exports = {
             "Dec",
           ];
           const d = new Date();
-          let data = []
-          d.setMonth(d.getMonth()+1);
-          for(let i = 0; i < period; i++){
-            const dateFormat = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
-            const dateFinal = d.getDate() + ' ' + month[d.getMonth()];
-            
-            for(let j = 0; j < results.length; j++){
-              if(results[j].date === dateFormat){
+          let data = [];
+          d.setMonth(d.getMonth() + 1);
+          for (let i = 0; i < period; i++) {
+            const dateFormat =
+              d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+            const dateFinal = d.getDate() + " " + month[d.getMonth()];
+
+            for (let j = 0; j < results.length; j++) {
+              if (results[j].date === dateFormat) {
                 data.push({
                   ...results[j],
                   date: dateFinal,
