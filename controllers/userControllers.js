@@ -12,7 +12,7 @@ module.exports = {
     password = Crypto.createHmac("sha1", process.env.SHARED_KEY)
       .update(password)
       .digest("hex"); //hash password before save to db
-    checkUserQuery = `select * from users where email = "${db.escape(email)}"`;
+    checkUserQuery = `select * from users where email = ${db.escape(email)}`;
     db.query(checkUserQuery, (checkErr, checkResult) => {
       if (checkErr) {
         return res.status(500).send({
