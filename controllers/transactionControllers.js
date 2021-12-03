@@ -316,6 +316,7 @@ module.exports = {
           });
         } else {
           const month = [
+            "",
             "Jan",
             "Feb",
             "Mar",
